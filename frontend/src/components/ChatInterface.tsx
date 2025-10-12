@@ -1,3 +1,5 @@
+// src/components/ChatInterface.tsx
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,8 +8,6 @@ import { Send, Mic, Bot, User, Upload, Download, Loader2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { apiClient, Message } from "@/services/api";
 import { toast } from "sonner";
-
-// Message interface is now imported from api.ts
 
 const ChatInterface = () => {
   const [messages, setMessages] = useState<Message[]>([
@@ -31,76 +31,91 @@ const ChatInterface = () => {
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
 
-    const userMessage: Message = {
-      role: "user",
-      content: input,
-    };
-
+    const userMessage: Message = { role: "user", content: input };
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
+    const currentInput = input;
     setInput("");
 
     try {
-      const response = await apiClient.sendChatMessage({
-        message: input,
+      const { assistantMessage } = await apiClient.sendChatMessage({
+        message: currentInput,
         sessionId,
-        userId: 'anonymous', // In a real app, this would come from auth
-        language: 'en'
+        userId: "anonymous",
+        language: "en",
       });
 
-      setMessages(prev => [...prev, response.assistantMessage]);
-    } catch (error) {
-      console.error('Chat error:', error);
-      toast.error('Failed to send message. Please try again.');
-      
-      // Add error message
-      const errorMessage: Message = {
-        role: "assistant",
-        content: "I'm sorry, I encountered an error processing your message. Please try again.",
-      };
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages(prev => [...prev, assistantMessage]);
+    } catch (error: any) {
+      console.error("Chat error:", error);
+      toast.error("Failed to send message. Please try again.");
+      setMessages(prev => [
+        ...prev,
+        { role: "assistant", content: "I'm sorry, I encountered an error. Please try again." },
+      ]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Voice input functionality (Feature #13)
   const handleVoiceInput = () => {
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      toast.error('Voice input is not supported in this browser');
+    if (!("webkitSpeechRecognition" in window) && !("SpeechRecognition" in window)) {
+      toast.error("Voice input is not supported in this browser");
       return;
     }
 
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
-
     recognition.continuous = false;
     recognition.interimResults = false;
-    recognition.lang = 'en-US';
+    recognition.lang = "en-US";
 
     recognition.onstart = () => {
       setIsRecording(true);
-      toast.info('Listening... Speak now');
+      toast.info("Listening... Speak now");
     };
 
     recognition.onresult = (event: any) => {
       const transcript = event.results[0][0].transcript;
       setInput(transcript);
       setIsRecording(false);
-      toast.success('Voice input captured');
+      toast.success("Voice input captured");
     };
 
     recognition.onerror = (event: any) => {
-      console.error('Speech recognition error:', event.error);
+      console.error("Speech recognition error:", event.error);
       setIsRecording(false);
-      toast.error('Voice input failed. Please try again.');
+      toast.error("Voice input failed. Please try again.");
     };
 
-    recognition.onend = () => {
-      setIsRecording(false);
-    };
+    recognition.onend = () => setIsRecording(false);
 
     recognition.start();
+  };
+
+  const handleUploadDocument = () => {
+    const inputFile = document.createElement("input");
+    inputFile.type = "file";
+    inputFile.accept = ".pdf,.doc,.docx,.txt";
+    inputFile.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        try {
+          const content = await file.text();
+          const response = await apiClient.uploadDocument({
+            fileName: file.name,
+            fileContent: content,
+            fileType: file.type,
+            userId: "anonymous",
+          });
+          toast.success("Document uploaded and analyzed successfully!");
+          console.log("Document analysis:", response);
+        } catch (error) {
+          toast.error("Failed to upload document");
+        }
+      }
+    };
+    inputFile.click();
   };
 
   return (
@@ -118,9 +133,7 @@ const ChatInterface = () => {
         <div className="grid lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
           {/* Example Prompts */}
           <Card className="p-6 gradient-card border-border/50 animate-fade-in">
-            <h3 className="text-lg font-heading font-semibold text-primary mb-4">
-              Try asking...
-            </h3>
+            <h3 className="text-lg font-heading font-semibold text-primary mb-4">Try asking...</h3>
             <div className="space-y-3">
               {examplePrompts.map((prompt, idx) => (
                 <button
@@ -132,39 +145,9 @@ const ChatInterface = () => {
                 </button>
               ))}
             </div>
-
             <div className="mt-6 pt-6 border-t border-border">
-              <Button 
-                variant="outline" 
-                className="w-full" 
-                size="sm"
-                onClick={() => {
-                  const input = document.createElement('input');
-                  input.type = 'file';
-                  input.accept = '.pdf,.doc,.docx,.txt';
-                  input.onchange = async (e) => {
-                    const file = (e.target as HTMLInputElement).files?.[0];
-                    if (file) {
-                      try {
-                        const content = await file.text();
-                        const response = await apiClient.uploadDocument({
-                          fileName: file.name,
-                          fileContent: content,
-                          fileType: file.type,
-                          userId: 'anonymous'
-                        });
-                        toast.success('Document uploaded and analyzed successfully!');
-                        console.log('Document analysis:', response);
-                      } catch (error) {
-                        toast.error('Failed to upload document');
-                      }
-                    }
-                  };
-                  input.click();
-                }}
-              >
-                <Upload className="mr-2 h-4 w-4" />
-                Upload Document
+              <Button variant="outline" className="w-full" size="sm" onClick={handleUploadDocument}>
+                <Upload className="mr-2 h-4 w-4" /> Upload Document
               </Button>
             </div>
           </Card>
@@ -174,126 +157,36 @@ const ChatInterface = () => {
             <ScrollArea className="h-[500px] pr-4 mb-4">
               <div className="space-y-4">
                 {messages.map((message, idx) => (
-                  <div
-                    key={idx}
-                    className={`flex gap-3 ${
-                      message.role === "user" ? "flex-row-reverse" : ""
-                    }`}
-                  >
+                  <div key={idx} className={`flex gap-3 ${message.role === "user" ? "flex-row-reverse" : ""}`}>
                     <div
                       className={`flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center ${
-                        message.role === "user"
-                          ? "bg-accent text-white"
-                          : "bg-primary text-white"
+                        message.role === "user" ? "bg-accent text-white" : "bg-primary text-white"
                       }`}
                     >
-                      {message.role === "user" ? (
-                        <User className="h-4 w-4" />
-                      ) : (
-                        <Bot className="h-4 w-4" />
-                      )}
+                      {message.role === "user" ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
                     </div>
-
-                    <div
-                      className={`flex-1 ${
-                        message.role === "user" ? "text-right" : ""
-                      }`}
-                    >
+                    <div className={`flex-1 ${message.role === "user" ? "text-right" : ""}`}>
                       <div
                         className={`inline-block p-4 rounded-2xl ${
-                          message.role === "user"
-                            ? "bg-accent text-white"
-                            : "bg-card border border-border"
+                          message.role === "user" ? "bg-accent text-white" : "bg-card border border-border"
                         }`}
                       >
                         <p className="text-sm">{message.content}</p>
-
                         {message.citations && (
                           <div className="mt-3 pt-3 border-t border-border/30">
-                            <p className="text-xs font-medium mb-2 text-muted-foreground">
-                              Key Citations:
-                            </p>
+                            <p className="text-xs font-medium mb-2 text-muted-foreground">Key Citations:</p>
                             {message.citations.map((citation, i) => (
                               <p key={i} className="text-xs text-muted-foreground">
                                 • {citation}
                               </p>
                             ))}
-                            <div className="flex gap-2 mt-3">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="text-xs"
-                                onClick={async () => {
-                                  try {
-                                    const response = await apiClient.exportChat(sessionId);
-                                    if (response.success) {
-                                      toast.success('Chat exported successfully!');
-                                      // In a real app, this would download the PDF
-                                      console.log('Export URL:', response.exportUrl);
-                                    }
-                                  } catch (error) {
-                                    toast.error('Failed to export chat');
-                                  }
-                                }}
-                              >
-                                <Download className="mr-1 h-3 w-3" />
-                                Download Summary
-                              </Button>
-                              
-                              {/* Feedback buttons (Feature #16) */}
-                              <div className="flex gap-1">
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="text-xs p-1 h-6 w-6"
-                                  onClick={async () => {
-                                    try {
-                                      await apiClient.submitFeedback({
-                                        userId: 'anonymous',
-                                        type: 'thumbs_up',
-                                        message: 'Helpful response',
-                                        rating: 5,
-                                        sessionId
-                                      });
-                                      toast.success('Thank you for your feedback!');
-                                    } catch (error) {
-                                      toast.error('Failed to submit feedback');
-                                    }
-                                  }}
-                                >
-                                  👍
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="text-xs p-1 h-6 w-6"
-                                  onClick={async () => {
-                                    try {
-                                      await apiClient.submitFeedback({
-                                        userId: 'anonymous',
-                                        type: 'thumbs_down',
-                                        message: 'Response could be improved',
-                                        rating: 1,
-                                        sessionId
-                                      });
-                                      toast.success('Thank you for your feedback!');
-                                    } catch (error) {
-                                      toast.error('Failed to submit feedback');
-                                    }
-                                  }}
-                                >
-                                  👎
-                                </Button>
-                              </div>
-                            </div>
                           </div>
                         )}
                       </div>
                     </div>
                   </div>
                 ))}
-                
-                {/* Loading indicator */}
+
                 {isLoading && (
                   <div className="flex gap-3">
                     <div className="flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center bg-primary text-white">
@@ -322,30 +215,11 @@ const ChatInterface = () => {
                 className="flex-1 rounded-xl"
                 disabled={isLoading}
               />
-              <Button
-                variant="ghost"
-                size="icon"
-                className="flex-shrink-0"
-                disabled={isLoading}
-                onClick={handleVoiceInput}
-              >
-                {isRecording ? (
-                  <Loader2 className="h-5 w-5 animate-spin text-red-500" />
-                ) : (
-                  <Mic className="h-5 w-5" />
-                )}
+              <Button variant="ghost" size="icon" className="flex-shrink-0" disabled={isLoading} onClick={handleVoiceInput}>
+                {isRecording ? <Loader2 className="h-5 w-5 animate-spin text-red-500" /> : <Mic className="h-5 w-5" />}
               </Button>
-              <Button
-                onClick={handleSend}
-                size="icon"
-                className="flex-shrink-0 glow-primary"
-                disabled={isLoading || !input.trim()}
-              >
-                {isLoading ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                ) : (
-                  <Send className="h-5 w-5" />
-                )}
+              <Button onClick={handleSend} size="icon" className="flex-shrink-0 glow-primary" disabled={isLoading || !input.trim()}>
+                {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
               </Button>
             </div>
           </Card>

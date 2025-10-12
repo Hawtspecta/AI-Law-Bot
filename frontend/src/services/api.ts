@@ -280,12 +280,7 @@ class ApiClient {
         console.error(`API request failed for ${url}:`, error);
         lastError = error as Error;
         
-        // Try next URL if available
-        if (await this.tryNextURL()) {
-          continue;
-        }
-        
-        // If no more URLs to try, throw the last error
+        if (await this.tryNextURL()) continue;
         break;
       }
     }
@@ -300,8 +295,6 @@ class ApiClient {
         body: JSON.stringify(request),
       });
     } catch (error) {
-      // Return mock response if server is unavailable
-      console.warn('Server unavailable, returning mock chat response');
       return {
         userMessage: {
           role: 'user',
@@ -310,7 +303,7 @@ class ApiClient {
         },
         assistantMessage: {
           role: 'assistant',
-          content: `I understand your question: "${request.message}". This is a mock response because the server is currently unavailable. Please ensure the backend server is running for full functionality.`,
+          content: `I understand your question: "${request.message}". Mock response because server is offline.`,
           citations: ['Mock Response - Server Offline'],
           timestamp: new Date().toISOString()
         }
@@ -325,7 +318,6 @@ class ApiClient {
         body: JSON.stringify(request),
       });
     } catch (error) {
-      console.warn('Server unavailable, returning mock document upload response');
       return {
         id: `mock_${Date.now()}`,
         fileName: request.fileName,
@@ -335,7 +327,7 @@ class ApiClient {
           summary: 'Mock document analysis - server offline',
           keyPoints: ['Document uploaded successfully', 'Analysis completed'],
           risks: [],
-          recommendations: ['Please ensure server is running for real analysis']
+          recommendations: ['Ensure server is running for real analysis']
         }
       };
     }
@@ -348,11 +340,10 @@ class ApiClient {
         body: JSON.stringify(request),
       });
     } catch (error) {
-      console.warn('Server unavailable, returning mock legal search response');
       return {
         query: request.query,
         results: {
-          content: `Mock legal search results for: "${request.query}". This is a placeholder response because the server is currently unavailable.`,
+          content: `Mock legal search results for: "${request.query}".`,
           citations: ['Mock Legal Search - Server Offline'],
           searchResults: []
         },
@@ -368,7 +359,6 @@ class ApiClient {
         body: JSON.stringify({ language }),
       });
     } catch (error) {
-      console.warn('Server unavailable, returning mock language update response');
       return {
         success: true,
         user: { id: userId, language },
@@ -381,8 +371,6 @@ class ApiClient {
     try {
       return await this.request('/health');
     } catch (error) {
-      // Return mock health check if server is unavailable
-      console.warn('Server unavailable, returning mock health check');
       return {
         status: 'MOCK',
         timestamp: new Date().toISOString()
@@ -390,7 +378,7 @@ class ApiClient {
     }
   }
 
-  // Authentication methods (Features #2, #3)
+  // Authentication
   async login(request: AuthRequest): Promise<AuthResponse> {
     try {
       return await this.request<AuthResponse>('/api/auth/login', {
@@ -398,7 +386,6 @@ class ApiClient {
         body: JSON.stringify(request),
       });
     } catch (error) {
-      console.warn('Server unavailable, returning mock login response');
       return {
         success: true,
         token: 'mock_token_' + Date.now(),
@@ -420,7 +407,6 @@ class ApiClient {
         body: JSON.stringify(request),
       });
     } catch (error) {
-      console.warn('Server unavailable, returning mock register response');
       return {
         success: true,
         user: {
@@ -434,7 +420,7 @@ class ApiClient {
     }
   }
 
-  // Session management (Feature #9)
+  // Session
   async createSession(userId?: string, title?: string): Promise<SessionResponse> {
     try {
       return await this.request<SessionResponse>('/api/sessions', {
@@ -442,7 +428,6 @@ class ApiClient {
         body: JSON.stringify({ userId, title }),
       });
     } catch (error) {
-      console.warn('Server unavailable, returning mock session response');
       return {
         success: true,
         session: {
@@ -458,7 +443,7 @@ class ApiClient {
     }
   }
 
-  // Contract analysis (Feature #18)
+  // Contract analysis
   async analyzeContract(request: ContractAnalysisRequest): Promise<ContractAnalysisResponse> {
     try {
       return await this.request<ContractAnalysisResponse>('/api/contracts/analyze', {
@@ -466,7 +451,6 @@ class ApiClient {
         body: JSON.stringify(request),
       });
     } catch (error) {
-      console.warn('Server unavailable, returning mock contract analysis response');
       return {
         success: true,
         analysis: {
@@ -481,7 +465,7 @@ class ApiClient {
     }
   }
 
-  // Form assistance (Feature #19)
+  // Form assistance
   async fillForm(request: FormFillRequest): Promise<FormFillResponse> {
     try {
       return await this.request<FormFillResponse>('/api/forms/fill', {
@@ -489,7 +473,6 @@ class ApiClient {
         body: JSON.stringify(request),
       });
     } catch (error) {
-      console.warn('Server unavailable, returning mock form fill response');
       return {
         success: true,
         filledForm: {
@@ -504,7 +487,7 @@ class ApiClient {
     }
   }
 
-  // Document comparison (Feature #20)
+  // Document comparison
   async compareDocuments(request: DocumentComparisonRequest): Promise<DocumentComparisonResponse> {
     try {
       return await this.request<DocumentComparisonResponse>('/api/documents/compare', {
@@ -512,7 +495,6 @@ class ApiClient {
         body: JSON.stringify(request),
       });
     } catch (error) {
-      console.warn('Server unavailable, returning mock document comparison response');
       return {
         success: true,
         comparison: {
@@ -527,24 +509,22 @@ class ApiClient {
     }
   }
 
-  // Legal news (Feature #7)
+  // Legal news
   async getLegalNews(region?: string, topic?: string, limit?: number): Promise<LegalNewsResponse> {
     try {
       const params = new URLSearchParams();
       if (region) params.append('region', region);
       if (topic) params.append('topic', topic);
       if (limit) params.append('limit', limit.toString());
-      
       return await this.request<LegalNewsResponse>(`/api/news?${params.toString()}`);
     } catch (error) {
-      console.warn('Server unavailable, returning mock legal news response');
       return {
         success: true,
         news: [
           {
             id: 1,
             title: 'Mock Legal News - Server Offline',
-            summary: 'This is a placeholder news article because the server is currently unavailable.',
+            summary: 'This is a placeholder news article.',
             date: new Date().toISOString(),
             source: 'Mock Source'
           }
@@ -556,24 +536,27 @@ class ApiClient {
     }
   }
 
-  // Chat export (Feature #15)
-  async exportChat(sessionId: string): Promise<ChatExportResponse> {
+  // Chat export with PDF download
+  async exportChat(sessionId: string): Promise<void> {
     try {
-      return await this.request<ChatExportResponse>(`/api/chat/export/${sessionId}`, {
-        method: 'POST',
-      });
+      const url = `${this.getCurrentURL()}/api/chat/export/${sessionId}`;
+      const response = await fetch(url, { method: 'POST' });
+      if (!response.ok) throw new Error('Failed to export chat');
+      const blob = await response.blob();
+      const downloadUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = `chat_${sessionId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(downloadUrl);
     } catch (error) {
-      console.warn('Server unavailable, returning mock chat export response');
-      return {
-        success: true,
-        exportUrl: `/mock/exports/${sessionId}.pdf`,
-        messageCount: 10,
-        timestamp: new Date().toISOString()
-      };
+      console.warn('Server unavailable, cannot export chat PDF');
     }
   }
 
-  // Feedback system (Feature #16)
+  // Feedback
   async submitFeedback(request: FeedbackRequest): Promise<FeedbackResponse> {
     try {
       return await this.request<FeedbackResponse>('/api/feedback', {
@@ -581,7 +564,6 @@ class ApiClient {
         body: JSON.stringify(request),
       });
     } catch (error) {
-      console.warn('Server unavailable, returning mock feedback response');
       return {
         success: true,
         feedback: { id: 'mock_feedback', ...request },
@@ -590,7 +572,7 @@ class ApiClient {
     }
   }
 
-  // Privacy controls (Features #21, #22)
+  // Privacy
   async updatePrivacy(userId: string, request: PrivacyRequest): Promise<PrivacyResponse> {
     try {
       return await this.request<PrivacyResponse>(`/api/users/${userId}/privacy`, {
@@ -598,7 +580,6 @@ class ApiClient {
         body: JSON.stringify(request),
       });
     } catch (error) {
-      console.warn('Server unavailable, returning mock privacy update response');
       return {
         success: true,
         user: { id: userId, ...request },
@@ -607,6 +588,7 @@ class ApiClient {
     }
   }
 
+  // Metrics
   // Metrics (Feature #11)
   async getMetrics(): Promise<MetricsResponse> {
     try {
@@ -629,3 +611,4 @@ class ApiClient {
 
 export const apiClient = new ApiClient();
 export default apiClient;
+
