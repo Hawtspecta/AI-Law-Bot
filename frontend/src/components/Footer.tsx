@@ -1,118 +1,163 @@
-import { Scale, Mail, Twitter, Linkedin, Github } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { 
+  MessageSquare, 
+  FileText, 
+  Newspaper, 
+  Info,
+  Mail,
+  Phone,
+  MapPin,
+  ExternalLink,
+  Heart
+} from "lucide-react";
 
 const Footer = () => {
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const navigationLinks = [
+    { id: 'hero', label: 'Home', icon: MessageSquare },
+    { id: 'ask-a-question', label: 'Ask a Question', icon: MessageSquare },
+    { id: 'tools', label: 'Documents', icon: FileText },
+    { id: 'news', label: 'News', icon: Newspaper },
+    { id: 'how-it-works', label: 'How It Works', icon: Info }
+  ];
+
+  const legalLinks = [
+    { label: 'Privacy Policy', href: '#' },
+    { label: 'Terms of Service', href: '#' },
+    { label: 'Cookie Policy', href: '#' },
+    { label: 'Data Protection', href: '#' }
+  ];
+
+  const supportLinks = [
+    { label: 'Help Center', href: '#' },
+    { label: 'Contact Support', href: '#' },
+    { label: 'API Documentation', href: '#' },
+    { label: 'Status Page', href: '#' }
+  ];
+
   return (
-    <footer className="bg-primary text-white py-12 border-t border-primary-foreground/10">
-      <div className="container mx-auto px-4">
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
-          {/* Brand */}
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <Scale className="h-6 w-6 text-accent" />
-              <h3 className="text-lg font-heading font-bold">
-                AI for Accessible Justice
-              </h3>
+    <footer className="bg-secondary/50 border-t border-border/50">
+      <div className="container mx-auto px-4 py-16">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {/* Brand Section */}
+          <div className="space-y-6">
+            <div className="flex items-center space-x-2">
+              <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
+                <span className="text-white font-bold text-sm">AI</span>
+              </div>
+              <span className="font-heading font-bold text-xl text-primary">Law Assistant</span>
             </div>
-            <p className="text-sm text-white/70 leading-relaxed">
-              Reimagining justice by breaking barriers — empowering individuals with accessible, affordable, and understandable legal help for all.
+            
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Simplifying legal help using reliable, citation-backed AI. 
+              Get instant answers to your legal questions with our advanced 
+              artificial intelligence platform.
             </p>
-          </div>
 
-          {/* Quick Links */}
-          <div>
-            <h4 className="font-heading font-semibold mb-4">Quick Links</h4>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <a href="#home" className="text-white/70 hover:text-accent transition-smooth">
-                  Home
-                </a>
-              </li>
-              <li>
-                <a href="#ask-a-question" className="text-white/70 hover:text-accent transition-smooth">
-                  Ask a Question
-                </a>
-              </li>
-              <li>
-                <a href="#documents" className="text-white/70 hover:text-accent transition-smooth">
-                  Tools
-                </a>
-              </li>
-              <li>
-                <a href="#about" className="text-white/70 hover:text-accent transition-smooth">
-                  About Us
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Resources */}
-          <div>
-            <h4 className="font-heading font-semibold mb-4">Resources</h4>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <a href="#" className="text-white/70 hover:text-accent transition-smooth">
-                  Legal News
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-white/70 hover:text-accent transition-smooth">
-                  Knowledge Base
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-white/70 hover:text-accent transition-smooth">
-                  FAQ
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-white/70 hover:text-accent transition-smooth">
-                  Privacy Policy
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Contact */}
-          <div>
-            <h4 className="font-heading font-semibold mb-4">Connect</h4>
-            <div className="flex gap-3 mb-4">
-              <a
-                href="#"
-                className="bg-white/10 hover:bg-accent w-10 h-10 rounded-lg flex items-center justify-center transition-smooth"
-              >
-                <Twitter className="h-5 w-5" />
-              </a>
-              <a
-                href="#"
-                className="bg-white/10 hover:bg-accent w-10 h-10 rounded-lg flex items-center justify-center transition-smooth"
-              >
-                <Linkedin className="h-5 w-5" />
-              </a>
-              <a
-                href="#"
-                className="bg-white/10 hover:bg-accent w-10 h-10 rounded-lg flex items-center justify-center transition-smooth"
-              >
-                <Github className="h-5 w-5" />
-              </a>
-              <a
-                href="#"
-                className="bg-white/10 hover:bg-accent w-10 h-10 rounded-lg flex items-center justify-center transition-smooth"
-              >
-                <Mail className="h-5 w-5" />
-              </a>
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                <Mail className="h-4 w-4" />
+                <span>support@ailawassistant.com</span>
+              </div>
+              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                <Phone className="h-4 w-4" />
+                <span>+91 98765 43210</span>
+              </div>
+              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                <MapPin className="h-4 w-4" />
+                <span>Mumbai, India</span>
+              </div>
             </div>
-            <p className="text-sm text-white/70">
-              contact@aijustice.ai
+          </div>
+
+          {/* Navigation Links */}
+          <div className="space-y-6">
+            <h3 className="text-lg font-heading font-semibold text-primary">Navigation</h3>
+            <div className="space-y-3">
+              {navigationLinks.map((link) => (
+                <button
+                  key={link.id}
+                  onClick={() => scrollToSection(link.id)}
+                  className="flex items-center space-x-2 text-sm text-muted-foreground hover:text-primary transition-colors group"
+                >
+                  <link.icon className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                  <span>{link.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Legal Links */}
+          <div className="space-y-6">
+            <h3 className="text-lg font-heading font-semibold text-primary">Legal</h3>
+            <div className="space-y-3">
+              {legalLinks.map((link) => (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  className="flex items-center space-x-2 text-sm text-muted-foreground hover:text-primary transition-colors group"
+                >
+                  <ExternalLink className="h-3 w-3 group-hover:scale-110 transition-transform" />
+                  <span>{link.label}</span>
+                </a>
+              ))}
+            </div>
+          </div>
+
+          {/* Support Links */}
+          <div className="space-y-6">
+            <h3 className="text-lg font-heading font-semibold text-primary">Support</h3>
+            <div className="space-y-3">
+              {supportLinks.map((link) => (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  className="flex items-center space-x-2 text-sm text-muted-foreground hover:text-primary transition-colors group"
+                >
+                  <ExternalLink className="h-3 w-3 group-hover:scale-110 transition-transform" />
+                  <span>{link.label}</span>
+                </a>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Mission Statement */}
+        <div className="mt-16 pt-8 border-t border-border/50">
+          <div className="text-center space-y-4">
+            <h3 className="text-xl font-heading font-semibold text-primary">
+              Our Mission
+            </h3>
+            <p className="text-muted-foreground max-w-4xl mx-auto leading-relaxed">
+              To simplify legal help using reliable, citation-backed AI. The system is built on a scalable, 
+              secure architecture using advanced technology to ensure high performance and accessibility for all users. 
+              We believe that legal assistance should be accessible, affordable, and available to everyone.
             </p>
           </div>
         </div>
 
-        <div className="border-t border-white/10 pt-8">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-white/60">
-            <p>© 2025 AI for Accessible Justice. All rights reserved.</p>
-            <p className="text-center md:text-right">
-              This prototype is for educational use only — not a substitute for professional legal advice.
-            </p>
+        {/* Bottom Bar */}
+        <div className="mt-12 pt-8 border-t border-border/50">
+          <div className="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0">
+            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+              <span>© 2024 AI Law Assistant. Made with</span>
+              <Heart className="h-4 w-4 text-red-500" />
+              <span>in India.</span>
+            </div>
+            
+            <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+              <span>Powered by OpenAI GPT-4</span>
+              <span>•</span>
+              <span>Built with React & Node.js</span>
+              <span>•</span>
+              <span>Secured with Enterprise-grade encryption</span>
+            </div>
           </div>
         </div>
       </div>

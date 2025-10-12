@@ -1,0 +1,19 @@
+{
+  "name": "ai-law-app",
+  "version": "1.0.0",
+  "description": "AI-powered legal assistant application",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd server && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "install:all": "npm install && cd server && npm install && cd ../frontend && npm install",
+    "build": "cd frontend && npm run build",
+    "start": "cd server && npm start"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -2,14 +2,12 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Send, Mic, Bot, User, Upload, Download } from "lucide-react";
+import { Send, Mic, Bot, User, Upload, Download, Loader2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { apiClient, Message } from "@/services/api";
+import { toast } from "sonner";
 
-interface Message {
-  role: "user" | "assistant";
-  content: string;
-  citations?: string[];
-}
+// Message interface is now imported from api.ts
 
 const ChatInterface = () => {
   const [messages, setMessages] = useState<Message[]>([
@@ -19,6 +17,9 @@ const ChatInterface = () => {
     },
   ]);
   const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [sessionId] = useState(() => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
 
   const examplePrompts = [
     "What is the procedure for consumer complaints?",
@@ -27,27 +28,79 @@ const ChatInterface = () => {
     "How do I file an RTI application?",
   ];
 
-  const handleSend = () => {
-    if (!input.trim()) return;
+  const handleSend = async () => {
+    if (!input.trim() || isLoading) return;
 
-    const newMessage: Message = {
+    const userMessage: Message = {
       role: "user",
       content: input,
     };
 
-    setMessages([...messages, newMessage]);
-
-    // Simulate AI response
-    setTimeout(() => {
-      const aiResponse: Message = {
-        role: "assistant",
-        content: "I understand your question. Based on current Indian law, here's what you need to know...",
-        citations: ["Consumer Protection Act, 2019", "Section 35 - National Consumer Disputes Redressal Commission"],
-      };
-      setMessages((prev) => [...prev, aiResponse]);
-    }, 1000);
-
+    setMessages(prev => [...prev, userMessage]);
+    setIsLoading(true);
     setInput("");
+
+    try {
+      const response = await apiClient.sendChatMessage({
+        message: input,
+        sessionId,
+        userId: 'anonymous', // In a real app, this would come from auth
+        language: 'en'
+      });
+
+      setMessages(prev => [...prev, response.assistantMessage]);
+    } catch (error) {
+      console.error('Chat error:', error);
+      toast.error('Failed to send message. Please try again.');
+      
+      // Add error message
+      const errorMessage: Message = {
+        role: "assistant",
+        content: "I'm sorry, I encountered an error processing your message. Please try again.",
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Voice input functionality (Feature #13)
+  const handleVoiceInput = () => {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      toast.error('Voice input is not supported in this browser');
+      return;
+    }
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+
+    recognition.onstart = () => {
+      setIsRecording(true);
+      toast.info('Listening... Speak now');
+    };
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setInput(transcript);
+      setIsRecording(false);
+      toast.success('Voice input captured');
+    };
+
+    recognition.onerror = (event: any) => {
+      console.error('Speech recognition error:', event.error);
+      setIsRecording(false);
+      toast.error('Voice input failed. Please try again.');
+    };
+
+    recognition.onend = () => {
+      setIsRecording(false);
+    };
+
+    recognition.start();
   };
 
   return (
@@ -81,7 +134,35 @@ const ChatInterface = () => {
             </div>
 
             <div className="mt-6 pt-6 border-t border-border">
-              <Button variant="outline" className="w-full" size="sm">
+              <Button 
+                variant="outline" 
+                className="w-full" 
+                size="sm"
+                onClick={() => {
+                  const input = document.createElement('input');
+                  input.type = 'file';
+                  input.accept = '.pdf,.doc,.docx,.txt';
+                  input.onchange = async (e) => {
+                    const file = (e.target as HTMLInputElement).files?.[0];
+                    if (file) {
+                      try {
+                        const content = await file.text();
+                        const response = await apiClient.uploadDocument({
+                          fileName: file.name,
+                          fileContent: content,
+                          fileType: file.type,
+                          userId: 'anonymous'
+                        });
+                        toast.success('Document uploaded and analyzed successfully!');
+                        console.log('Document analysis:', response);
+                      } catch (error) {
+                        toast.error('Failed to upload document');
+                      }
+                    }
+                  };
+                  input.click();
+                }}
+              >
                 <Upload className="mr-2 h-4 w-4" />
                 Upload Document
               </Button>
@@ -137,20 +218,97 @@ const ChatInterface = () => {
                                 • {citation}
                               </p>
                             ))}
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="mt-3 text-xs"
-                            >
-                              <Download className="mr-1 h-3 w-3" />
-                              Download Summary
-                            </Button>
+                            <div className="flex gap-2 mt-3">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-xs"
+                                onClick={async () => {
+                                  try {
+                                    const response = await apiClient.exportChat(sessionId);
+                                    if (response.success) {
+                                      toast.success('Chat exported successfully!');
+                                      // In a real app, this would download the PDF
+                                      console.log('Export URL:', response.exportUrl);
+                                    }
+                                  } catch (error) {
+                                    toast.error('Failed to export chat');
+                                  }
+                                }}
+                              >
+                                <Download className="mr-1 h-3 w-3" />
+                                Download Summary
+                              </Button>
+                              
+                              {/* Feedback buttons (Feature #16) */}
+                              <div className="flex gap-1">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="text-xs p-1 h-6 w-6"
+                                  onClick={async () => {
+                                    try {
+                                      await apiClient.submitFeedback({
+                                        userId: 'anonymous',
+                                        type: 'thumbs_up',
+                                        message: 'Helpful response',
+                                        rating: 5,
+                                        sessionId
+                                      });
+                                      toast.success('Thank you for your feedback!');
+                                    } catch (error) {
+                                      toast.error('Failed to submit feedback');
+                                    }
+                                  }}
+                                >
+                                  👍
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="text-xs p-1 h-6 w-6"
+                                  onClick={async () => {
+                                    try {
+                                      await apiClient.submitFeedback({
+                                        userId: 'anonymous',
+                                        type: 'thumbs_down',
+                                        message: 'Response could be improved',
+                                        rating: 1,
+                                        sessionId
+                                      });
+                                      toast.success('Thank you for your feedback!');
+                                    } catch (error) {
+                                      toast.error('Failed to submit feedback');
+                                    }
+                                  }}
+                                >
+                                  👎
+                                </Button>
+                              </div>
+                            </div>
                           </div>
                         )}
                       </div>
                     </div>
                   </div>
                 ))}
+                
+                {/* Loading indicator */}
+                {isLoading && (
+                  <div className="flex gap-3">
+                    <div className="flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center bg-primary text-white">
+                      <Bot className="h-4 w-4" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="inline-block p-4 rounded-2xl bg-card border border-border">
+                        <div className="flex items-center gap-2">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <p className="text-sm text-muted-foreground">AI is thinking...</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </ScrollArea>
 
@@ -159,23 +317,35 @@ const ChatInterface = () => {
               <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && handleSend()}
+                onKeyPress={(e) => e.key === "Enter" && !isLoading && handleSend()}
                 placeholder="Type your legal question here..."
                 className="flex-1 rounded-xl"
+                disabled={isLoading}
               />
               <Button
                 variant="ghost"
                 size="icon"
                 className="flex-shrink-0"
+                disabled={isLoading}
+                onClick={handleVoiceInput}
               >
-                <Mic className="h-5 w-5" />
+                {isRecording ? (
+                  <Loader2 className="h-5 w-5 animate-spin text-red-500" />
+                ) : (
+                  <Mic className="h-5 w-5" />
+                )}
               </Button>
               <Button
                 onClick={handleSend}
                 size="icon"
                 className="flex-shrink-0 glow-primary"
+                disabled={isLoading || !input.trim()}
               >
-                <Send className="h-5 w-5" />
+                {isLoading ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  <Send className="h-5 w-5" />
+                )}
               </Button>
             </div>
           </Card>

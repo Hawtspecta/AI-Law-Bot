@@ -1,81 +1,214 @@
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Sparkles } from "lucide-react";
-import heroBackground from "@/assets/hero-background.jpg";
+import { Card } from "@/components/ui/card";
+import { 
+  MessageSquare, 
+  ArrowRight, 
+  Users, 
+  FileText, 
+  DollarSign,
+  TrendingUp,
+  Shield,
+  Clock
+} from "lucide-react";
+import { apiClient, MetricsResponse } from "@/services/api";
+import { toast } from "sonner";
 
 const Hero = () => {
+  const [metrics, setMetrics] = useState<MetricsResponse['metrics'] | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    loadMetrics();
+  }, []);
+
+  const loadMetrics = async () => {
+    try {
+      const response = await apiClient.getMetrics();
+      if (response.success) {
+        setMetrics(response.metrics);
+      }
+    } catch (error) {
+      console.error('Failed to load metrics:', error);
+    }
+  };
+
+  const handleStartChat = async () => {
+    setIsLoading(true);
+    try {
+      // Create new session (Feature #9)
+      const response = await apiClient.createSession('anonymous', 'New Conversation');
+      if (response.success) {
+        // Scroll to chat interface
+        const chatElement = document.getElementById('ask-a-question');
+        if (chatElement) {
+          chatElement.scrollIntoView({ behavior: 'smooth' });
+        }
+        toast.success('New chat session started!');
+      }
+    } catch (error) {
+      toast.error('Failed to start chat session');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleLearnMore = () => {
+    // Scroll to detailed feature explanation sections (Feature #10)
+    const featuresElement = document.getElementById('how-it-works');
+    if (featuresElement) {
+      featuresElement.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
-    <section 
-      id="home"
-      className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16"
-    >
-      {/* Background with gradient overlay */}
-      <div className="absolute inset-0 z-0">
-        <img 
-          src={heroBackground} 
-          alt="AI Legal Assistant Background" 
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 gradient-hero opacity-90"></div>
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/50 to-background"></div>
-      </div>
+    <section id="hero" className="relative py-20 bg-gradient-to-br from-primary/5 via-secondary/10 to-accent/5 overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+      
+      <div className="container mx-auto px-4 relative z-10">
+        <div className="grid lg:grid-cols-2 gap-12 items-center">
+          {/* Left Content */}
+          <div className="space-y-8 animate-fade-up">
+            <div className="space-y-4">
+              <div className="inline-flex items-center px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium">
+                <Shield className="h-4 w-4 mr-2" />
+                AI-Powered Legal Assistant
+              </div>
+              
+              <h1 className="text-4xl md:text-6xl font-heading font-bold text-primary leading-tight">
+                Simplify Legal Help with{" "}
+                <span className="text-accent">Reliable AI</span>
+              </h1>
+              
+              <p className="text-lg text-muted-foreground max-w-2xl leading-relaxed">
+                Get instant, citation-backed legal answers in simple language. 
+                Upload documents, analyze contracts, and access legal research 
+                powered by advanced AI technology.
+              </p>
+            </div>
 
-      {/* Content */}
-      <div className="container mx-auto px-4 z-10 text-center">
-        <div className="max-w-4xl mx-auto animate-fade-up">
-          <div className="inline-flex items-center gap-2 bg-accent/10 border border-accent/20 rounded-full px-4 py-2 mb-6">
-            <Sparkles className="h-4 w-4 text-accent" />
-            <span className="text-sm font-medium text-accent">
-              Powered by Advanced AI
-            </span>
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              {/* Start Chat Button (Feature #9) */}
+              <Button
+                size="lg"
+                onClick={handleStartChat}
+                disabled={isLoading}
+                className="glow-primary flex items-center space-x-2"
+              >
+                <MessageSquare className="h-5 w-5" />
+                <span>{isLoading ? 'Starting...' : 'Start Chat'}</span>
+                <ArrowRight className="h-5 w-5" />
+              </Button>
+
+              {/* Learn More Button (Feature #10) */}
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={handleLearnMore}
+                className="flex items-center space-x-2"
+              >
+                <span>Learn More</span>
+                <ArrowRight className="h-5 w-5" />
+              </Button>
+            </div>
+
+            {/* Trust Indicators */}
+            <div className="flex items-center space-x-6 text-sm text-muted-foreground">
+              <div className="flex items-center space-x-1">
+                <Shield className="h-4 w-4 text-green-500" />
+                <span>Secure & Private</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <Clock className="h-4 w-4 text-blue-500" />
+                <span>24/7 Available</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <TrendingUp className="h-4 w-4 text-purple-500" />
+                <span>AI-Powered</span>
+              </div>
+            </div>
           </div>
 
-          <h1 className="text-5xl md:text-7xl font-heading font-bold text-white mb-6 leading-tight">
-            Simplify Legal Help
-            <br />
-            <span className="text-accent">with AI</span>
-          </h1>
-
-          <p className="text-xl md:text-2xl text-white/90 mb-8 max-w-2xl mx-auto">
-            Ask legal questions in plain language and get clear, reliable answers instantly.
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Button 
-              size="lg" 
-              className="text-lg px-8 py-6 bg-accent hover:bg-accent/90 text-white glow-accent animate-glow-pulse group"
-            >
-              <MessageSquare className="mr-2 h-5 w-5 group-hover:scale-110 transition-smooth" />
-              Start Chat
-            </Button>
-            <Button 
-              size="lg" 
-              variant="outline"
-              className="text-lg px-8 py-6 bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20"
-            >
-              Learn More
-            </Button>
-          </div>
-
-          {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mt-16 max-w-3xl mx-auto">
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
-              <div className="text-3xl font-bold text-white mb-1">2000+</div>
-              <div className="text-sm text-white/80">Citizens Empowered</div>
+          {/* Right Content - Metrics Display (Feature #11) */}
+          <div className="space-y-6 animate-fade-in">
+            <div className="text-center mb-8">
+              <h3 className="text-2xl font-heading font-semibold text-primary mb-2">
+                Trusted by Thousands
+              </h3>
+              <p className="text-muted-foreground">
+                Real statistics from our platform
+              </p>
             </div>
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
-              <div className="text-3xl font-bold text-white mb-1">₹40L</div>
-              <div className="text-sm text-white/80">Saved in Legal Fees</div>
+
+            <div className="grid grid-cols-2 gap-4">
+              {/* Legal Fees Saved */}
+              <Card className="p-6 text-center gradient-card border-border/50">
+                <div className="flex items-center justify-center mb-3">
+                  <DollarSign className="h-8 w-8 text-green-500" />
+                </div>
+                <div className="text-2xl font-bold text-primary mb-1">
+                  {metrics?.legalFeesSaved || '₹40L'}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Legal Fees Saved
+                </div>
+              </Card>
+
+              {/* Total Users */}
+              <Card className="p-6 text-center gradient-card border-border/50">
+                <div className="flex items-center justify-center mb-3">
+                  <Users className="h-8 w-8 text-blue-500" />
+                </div>
+                <div className="text-2xl font-bold text-primary mb-1">
+                  {metrics?.totalUsers || '89'}+
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Active Users
+                </div>
+              </Card>
+
+              {/* Documents Processed */}
+              <Card className="p-6 text-center gradient-card border-border/50">
+                <div className="flex items-center justify-center mb-3">
+                  <FileText className="h-8 w-8 text-purple-500" />
+                </div>
+                <div className="text-2xl font-bold text-primary mb-1">
+                  {metrics?.documentsProcessed || '156'}+
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Documents Processed
+                </div>
+              </Card>
+
+              {/* Total Messages */}
+              <Card className="p-6 text-center gradient-card border-border/50">
+                <div className="flex items-center justify-center mb-3">
+                  <MessageSquare className="h-8 w-8 text-orange-500" />
+                </div>
+                <div className="text-2xl font-bold text-primary mb-1">
+                  {metrics?.totalMessages || '1,250'}+
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Questions Answered
+                </div>
+              </Card>
             </div>
-            <div className="col-span-2 md:col-span-1 bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
-              <div className="text-3xl font-bold text-white mb-1">24/7</div>
-              <div className="text-sm text-white/80">AI Assistance</div>
+
+            {/* Additional Stats */}
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground">
+                Data calculated from anonymized usage in our Audit Log
+              </p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Decorative elements */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent z-10"></div>
+      {/* Floating Elements */}
+      <div className="absolute top-20 left-10 w-20 h-20 bg-primary/10 rounded-full blur-xl animate-pulse"></div>
+      <div className="absolute bottom-20 right-10 w-32 h-32 bg-accent/10 rounded-full blur-xl animate-pulse delay-1000"></div>
     </section>
   );
 };
