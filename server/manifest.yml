@@ -1,0 +1,93 @@
+# AI Law Clean - Legal Assistant Backend
+# Read more about the manifest format here: https://manifest.build/docs
+
+name: AI Law Clean
+entities:
+  User:
+    properties:
+      - name: email
+      - name: name
+      - name: password
+      - name: language
+        type: string
+        default: "en"
+      - name: subscription
+        type: string
+        default: "free"
+      - name: isVerified
+        type: boolean
+        default: false
+      - name: lastLogin
+        type: timestamp
+
+  Message:
+    properties:
+      - name: sessionId
+      - name: userId
+      - name: role
+      - name: content
+      - name: citations
+        type: text
+      - name: timestamp
+        type: timestamp
+
+  Document:
+    properties:
+      - name: userId
+      - name: fileName
+      - name: fileType
+      - name: fileSize
+        type: number
+      - name: fileUrl
+      - name: status
+        type: string
+        default: "pending"
+      - name: analysis
+        type: text
+      - name: uploadedAt
+        type: timestamp
+
+  LegalQuery:
+    properties:
+      - name: userId
+      - name: query
+      - name: category
+      - name: jurisdiction
+        type: string
+        default: "India"
+      - name: results
+        type: text
+      - name: createdAt
+        type: timestamp
+
+  Session:
+    properties:
+      - name: sessionId
+      - name: userId
+      - name: title
+        type: string
+        default: "New Conversation"
+      - name: messageCount
+        type: number
+        default: 0
+      - name: isActive
+        type: boolean
+        default: true
+      - name: createdAt
+        type: timestamp
+      - name: updatedAt
+        type: timestamp
+
+  Feedback:
+    properties:
+      - name: userId
+      - name: type
+      - name: subject
+      - name: message
+      - name: rating
+        type: number
+      - name: status
+        type: string
+        default: "pending"
+      - name: createdAt
+        type: timestamp
