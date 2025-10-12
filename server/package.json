@@ -11,17 +11,20 @@
     "seed": "node node_modules/manifest/dist/manifest/src/seed/scripts/seed.js"
   },
   "dependencies": {
-    "manifest": "^4.17.8",
-    "openai": "^4.0.0",
+    "@google/generative-ai": "^0.24.1",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
     "express": "^4.18.0",
+    "groq-sdk": "^0.33.0",
+    "manifest": "^4.17.8",
     "node-fetch": "^2.6.0",
-    "cors": "^2.8.5"
+    "openai": "^4.0.0"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
-    "@types/express": "^4.17.0",
-    "@types/node-fetch": "^2.6.0",
     "@types/cors": "^2.8.0",
+    "@types/express": "^4.17.0",
+    "@types/node": "^20.0.0",
+    "@types/node-fetch": "^2.6.0",
     "ts-node": "^10.9.0",
     "typescript": "^5.0.0"
   }

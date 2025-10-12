@@ -6,6 +6,7 @@ import ToolsSection from "@/components/ToolsSection";
 import HowItWorks from "@/components/HowItWorks";
 import LegalNews from "@/components/LegalNews";
 import PrivacySettings from "@/components/PrivacySettings";
+import ConnectionStatus from "@/components/ConnectionStatus";
 import Footer from "@/components/Footer";
 
 const Index = () => {
@@ -26,6 +27,7 @@ const Index = () => {
         <PrivacySettings />
       </main>
       <Footer />
+      <ConnectionStatus />
     </div>
   );
 };
