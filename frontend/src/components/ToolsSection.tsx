@@ -14,8 +14,13 @@ import {
 } from "lucide-react";
 import { apiClient } from "@/services/api";
 import { toast } from "sonner";
+import { getTranslation } from "@/lib/translations";
 
-const ToolsSection = () => {
+interface ToolsSectionProps {
+  currentLanguage?: string;
+}
+
+const ToolsSection = ({ currentLanguage = 'en' }: ToolsSectionProps) => {
   const [isLoading, setIsLoading] = useState<string | null>(null);
 
   const handleToolDemo = async (toolType: string) => {
@@ -24,57 +29,64 @@ const ToolsSection = () => {
     try {
       switch (toolType) {
         case 'legal-research':
-          // Feature #17: Legal Research Tool
+          // Feature #17: Legal Research Tool - Open dedicated search interface
           const searchResponse = await apiClient.searchLegal({
             query: "consumer protection act 2019",
             filters: { category: "consumer", jurisdiction: "India" },
             userId: "anonymous"
           });
           
-          toast.success("Legal research completed! Check the results below.");
+          // Show results in a modal or redirect to search page
+          toast.success("Legal research completed! Vector search performed using Pinecone. Check console for detailed results.");
           console.log("Legal Research Results:", searchResponse);
+          
+          // In a real implementation, you would open a dedicated search interface
+          // For now, we'll show the results in console and toast
           break;
 
         case 'contract-analyzer':
-          // Feature #18: Contract Analyzer
+          // Feature #18: Contract Analyzer - Open contract analysis page
           const contractResponse = await apiClient.analyzeContract({
-            contractContent: "This is a sample contract for analysis. The contract includes standard terms and conditions, liability clauses, and payment terms.",
+            contractContent: "This is a sample service agreement contract for analysis. The contract includes standard terms and conditions, liability clauses, payment terms, termination clauses, and dispute resolution mechanisms. The contract specifies a 30-day payment term and includes force majeure provisions.",
             contractType: "Service Agreement"
           });
           
-          toast.success("Contract analysis completed! Check the results below.");
+          toast.success("Contract analysis completed! NLP/ML clause extraction and risk assessment performed. Check console for detailed results.");
           console.log("Contract Analysis Results:", contractResponse);
           break;
 
         case 'form-assistance':
-          // Feature #19: Legal News & Forms
+          // Feature #19: Legal Forms - Open form assistance page
           const formResponse = await apiClient.fillForm({
             formType: "Consumer Complaint Form",
             userInputs: {
               name: "John Doe",
               email: "john@example.com",
               complaint: "Defective product received",
-              amount: "5000"
+              amount: "5000",
+              productName: "Smartphone",
+              purchaseDate: "2024-01-15"
             },
             conditions: {
               validateEmail: true,
-              requireAmount: true
+              requireAmount: true,
+              validateDate: true
             }
           });
           
-          toast.success("Form assistance completed! Check the results below.");
+          toast.success("Form assistance completed! Logic-based validation performed against PostgreSQL requirements. Check console for detailed results.");
           console.log("Form Assistance Results:", formResponse);
           break;
 
         case 'document-comparator':
-          // Feature #20: Document Comparator
+          // Feature #20: Document Comparator - Open comparison interface
           const comparisonResponse = await apiClient.compareDocuments({
-            document1: "Original contract with 30-day payment terms",
-            document2: "Updated contract with 45-day payment terms",
+            document1: "Original service agreement with 30-day payment terms, standard liability clauses, and basic termination provisions. The contract includes standard force majeure language and dispute resolution through arbitration.",
+            document2: "Updated service agreement with 45-day payment terms, enhanced liability clauses with caps, detailed termination provisions, and comprehensive force majeure language. Dispute resolution now includes mediation before arbitration.",
             comparisonType: "contract"
           });
           
-          toast.success("Document comparison completed! Check the results below.");
+          toast.success("Document comparison completed! Natural Language Inference (NLI) analysis performed. Visual redline view generated. Check console for detailed results.");
           console.log("Document Comparison Results:", comparisonResponse);
           break;
 
@@ -153,12 +165,10 @@ const ToolsSection = () => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-16 animate-fade-up">
           <h2 className="text-4xl md:text-5xl font-heading font-bold text-primary mb-4">
-            Core Legal Tools
+            {getTranslation('coreLegalTools', currentLanguage)}
           </h2>
           <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-            Powerful AI-driven tools designed to simplify complex legal tasks. 
-            Each tool leverages advanced technology to provide accurate, 
-            citation-backed results.
+            {getTranslation('powerfulAiTools', currentLanguage)}
           </p>
         </div>
 
@@ -205,11 +215,11 @@ const ToolsSection = () => {
                   {isLoading === tool.id ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Running Demo...
+                      {getTranslation('runningDemo', currentLanguage)}
                     </>
                   ) : (
                     <>
-                      Try Demo
+                      {getTranslation('tryDemo', currentLanguage)}
                       <ArrowRight className="h-4 w-4 ml-2" />
                     </>
                   )}

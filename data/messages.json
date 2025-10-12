@@ -1,0 +1,20 @@
+[
+  {
+    "id": "msg_1760288946248_no3mcx62l",
+    "userId": "test_user",
+    "sessionId": "test_session",
+    "role": "user",
+    "content": "What is the Consumer Protection Act?",
+    "timestamp": "2025-10-12T17:09:06.248Z"
+  },
+  {
+    "id": "msg_1760288946251_py2ndql9s",
+    "userId": "test_user",
+    "sessionId": "test_session",
+    "role": "assistant",
+    "content": "I apologize, but I encountered an error while processing your legal query: \"What is the Consumer Protection Act?\". Please try rephrasing your question or contact support if the issue persists.",
+    "citations": "[]",
+    "sources": "[]",
+    "timestamp": "2025-10-12T17:09:06.251Z"
+  }
+]

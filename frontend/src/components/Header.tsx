@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { apiClient } from "@/services/api";
 import { toast } from "sonner";
+import { getTranslation } from "@/lib/translations";
 
 interface HeaderProps {
   onLanguageChange?: (language: string) => void;
@@ -91,15 +92,15 @@ const Header = ({ onLanguageChange, currentLanguage = 'en' }: HeaderProps) => {
     }
   };
 
-  const handleLanguageChange = async (language: string) => {
+  const handleLanguageChange = (language: string) => {
     try {
-      const userId = localStorage.getItem('userId') || 'anonymous';
-      await apiClient.updateUserLanguage(userId, language);
+      // Update language immediately in UI
       onLanguageChange?.(language);
       setIsLanguageOpen(false);
-      toast.success('Language updated successfully!');
+      toast.success('Language changed successfully!');
     } catch (error) {
-      toast.error('Failed to update language');
+      console.error('Language change error:', error);
+      toast.error('Failed to change language');
     }
   };
 
@@ -130,35 +131,35 @@ const Header = ({ onLanguageChange, currentLanguage = 'en' }: HeaderProps) => {
               className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
             >
               <Home className="h-4 w-4 mr-1 inline" />
-              Home
+              {getTranslation('home', currentLanguage)}
             </button>
             <button
               onClick={() => scrollToSection('ask-a-question')}
               className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
             >
               <MessageSquare className="h-4 w-4 mr-1 inline" />
-              Ask a Question
+              {getTranslation('askQuestion', currentLanguage)}
             </button>
             <button
               onClick={() => scrollToSection('tools')}
               className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
             >
               <FileText className="h-4 w-4 mr-1 inline" />
-              Documents
+              {getTranslation('documents', currentLanguage)}
             </button>
             <button
               onClick={() => scrollToSection('news')}
               className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
             >
               <Newspaper className="h-4 w-4 mr-1 inline" />
-              News
+              {getTranslation('news', currentLanguage)}
             </button>
             <button
               onClick={() => scrollToSection('about')}
               className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
             >
               <Info className="h-4 w-4 mr-1 inline" />
-              About
+              {getTranslation('about', currentLanguage)}
             </button>
           </nav>
 
@@ -202,7 +203,7 @@ const Header = ({ onLanguageChange, currentLanguage = 'en' }: HeaderProps) => {
               className="flex items-center space-x-1"
             >
               <LogIn className="h-4 w-4" />
-              <span className="hidden sm:inline">Login</span>
+              <span className="hidden sm:inline">{getTranslation('login', currentLanguage)}</span>
             </Button>
 
             {/* Sign Up Button (Feature #3) */}
@@ -212,7 +213,7 @@ const Header = ({ onLanguageChange, currentLanguage = 'en' }: HeaderProps) => {
               className="flex items-center space-x-1"
             >
               <UserPlus className="h-4 w-4" />
-              <span className="hidden sm:inline">Sign Up</span>
+              <span className="hidden sm:inline">{getTranslation('signUp', currentLanguage)}</span>
             </Button>
 
             {/* Mobile menu button */}
@@ -236,35 +237,35 @@ const Header = ({ onLanguageChange, currentLanguage = 'en' }: HeaderProps) => {
                 className="text-left px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-primary hover:bg-accent transition-colors"
               >
                 <Home className="h-4 w-4 mr-2 inline" />
-                Home
+                {getTranslation('home', currentLanguage)}
               </button>
               <button
                 onClick={() => scrollToSection('ask-a-question')}
                 className="text-left px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-primary hover:bg-accent transition-colors"
               >
                 <MessageSquare className="h-4 w-4 mr-2 inline" />
-                Ask a Question
+                {getTranslation('askQuestion', currentLanguage)}
               </button>
               <button
                 onClick={() => scrollToSection('tools')}
                 className="text-left px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-primary hover:bg-accent transition-colors"
               >
                 <FileText className="h-4 w-4 mr-2 inline" />
-                Documents
+                {getTranslation('documents', currentLanguage)}
               </button>
               <button
                 onClick={() => scrollToSection('news')}
                 className="text-left px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-primary hover:bg-accent transition-colors"
               >
                 <Newspaper className="h-4 w-4 mr-2 inline" />
-                News
+                {getTranslation('news', currentLanguage)}
               </button>
               <button
                 onClick={() => scrollToSection('about')}
                 className="text-left px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-primary hover:bg-accent transition-colors"
               >
                 <Info className="h-4 w-4 mr-2 inline" />
-                About
+                {getTranslation('about', currentLanguage)}
               </button>
             </nav>
           </div>
@@ -274,9 +275,10 @@ const Header = ({ onLanguageChange, currentLanguage = 'en' }: HeaderProps) => {
       {/* Login Modal */}
       {isLoginOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-md p-6">
+          <div className="absolute inset-0" onClick={() => setIsLoginOpen(false)}></div>
+          <Card className="w-full max-w-md p-6 relative z-10">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">Login</h2>
+              <h2 className="text-xl font-semibold">{getTranslation('login', currentLanguage)}</h2>
               <Button variant="ghost" size="sm" onClick={() => setIsLoginOpen(false)}>
                 <X className="h-4 w-4" />
               </Button>
@@ -295,7 +297,7 @@ const Header = ({ onLanguageChange, currentLanguage = 'en' }: HeaderProps) => {
                 onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
               />
               <Button onClick={handleLogin} disabled={isLoading} className="w-full">
-                {isLoading ? 'Logging in...' : 'Login'}
+                {isLoading ? 'Logging in...' : getTranslation('login', currentLanguage)}
               </Button>
             </div>
           </Card>
@@ -305,9 +307,10 @@ const Header = ({ onLanguageChange, currentLanguage = 'en' }: HeaderProps) => {
       {/* Signup Modal */}
       {isSignupOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-md p-6">
+          <div className="absolute inset-0" onClick={() => setIsSignupOpen(false)}></div>
+          <Card className="w-full max-w-md p-6 relative z-10">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">Sign Up</h2>
+              <h2 className="text-xl font-semibold">{getTranslation('signUp', currentLanguage)}</h2>
               <Button variant="ghost" size="sm" onClick={() => setIsSignupOpen(false)}>
                 <X className="h-4 w-4" />
               </Button>
@@ -332,7 +335,7 @@ const Header = ({ onLanguageChange, currentLanguage = 'en' }: HeaderProps) => {
                 onChange={(e) => setSignupForm({ ...signupForm, password: e.target.value })}
               />
               <Button onClick={handleSignup} disabled={isLoading} className="w-full">
-                {isLoading ? 'Creating Account...' : 'Sign Up'}
+                {isLoading ? 'Creating Account...' : getTranslation('signUp', currentLanguage)}
               </Button>
             </div>
           </Card>

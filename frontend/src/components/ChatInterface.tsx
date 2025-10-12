@@ -4,12 +4,17 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Send, Mic, Bot, User, Upload, Download, Loader2 } from "lucide-react";
+import { Send, Mic, Bot, User, Upload, Download, Loader2, X, FileText } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { apiClient, Message } from "@/services/api";
 import { toast } from "sonner";
+import { getTranslation } from "@/lib/translations";
 
-const ChatInterface = () => {
+interface ChatInterfaceProps {
+  currentLanguage?: string;
+}
+
+const ChatInterface = ({ currentLanguage = 'en' }: ChatInterfaceProps) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
@@ -19,7 +24,8 @@ const ChatInterface = () => {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
-  const [sessionId] = useState(() => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
+  const [uploadedDocuments, setUploadedDocuments] = useState<Array<{id: string, name: string, type: string}>>([]);
+  const [sessionId] = useState(() => localStorage.getItem('currentSessionId') || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
 
   const examplePrompts = [
     "What is the procedure for consumer complaints?",
@@ -108,6 +114,15 @@ const ChatInterface = () => {
             fileType: file.type,
             userId: "anonymous",
           });
+          
+          // Add document to uploaded documents list
+          const newDoc = {
+            id: response.id,
+            name: file.name,
+            type: file.type
+          };
+          setUploadedDocuments(prev => [...prev, newDoc]);
+          
           toast.success("Document uploaded and analyzed successfully!");
           console.log("Document analysis:", response);
         } catch (error) {
@@ -118,22 +133,27 @@ const ChatInterface = () => {
     inputFile.click();
   };
 
+  const handleRemoveDocument = (docId: string) => {
+    setUploadedDocuments(prev => prev.filter(doc => doc.id !== docId));
+    toast.success("Document removed");
+  };
+
   return (
     <section id="ask-a-question" className="py-20 bg-secondary/30">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12 animate-fade-up">
           <h2 className="text-4xl md:text-5xl font-heading font-bold text-primary mb-4">
-            Ask Your Legal Question
+            {getTranslation('askYourLegalQuestion', currentLanguage)}
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Get instant, reliable answers to your legal queries in simple language
+            {getTranslation('getInstantAnswers', currentLanguage)}
           </p>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
           {/* Example Prompts */}
           <Card className="p-6 gradient-card border-border/50 animate-fade-in">
-            <h3 className="text-lg font-heading font-semibold text-primary mb-4">Try asking...</h3>
+            <h3 className="text-lg font-heading font-semibold text-primary mb-4">{getTranslation('tryAsking', currentLanguage)}</h3>
             <div className="space-y-3">
               {examplePrompts.map((prompt, idx) => (
                 <button
@@ -145,9 +165,35 @@ const ChatInterface = () => {
                 </button>
               ))}
             </div>
+            
+            {/* Uploaded Documents Display */}
+            {uploadedDocuments.length > 0 && (
+              <div className="mt-6 pt-6 border-t border-border">
+                <h4 className="text-sm font-medium text-primary mb-3">Uploaded Documents:</h4>
+                <div className="space-y-2">
+                  {uploadedDocuments.map((doc) => (
+                    <div key={doc.id} className="flex items-center justify-between p-2 bg-secondary rounded-lg">
+                      <div className="flex items-center space-x-2">
+                        <FileText className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground truncate max-w-[150px]">{doc.name}</span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveDocument(doc.id)}
+                        className="h-6 w-6 p-0 hover:bg-red-100"
+                      >
+                        <X className="h-3 w-3 text-red-500" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
             <div className="mt-6 pt-6 border-t border-border">
               <Button variant="outline" className="w-full" size="sm" onClick={handleUploadDocument}>
-                <Upload className="mr-2 h-4 w-4" /> Upload Document
+                <Upload className="mr-2 h-4 w-4" /> {getTranslation('uploadDocument', currentLanguage)}
               </Button>
             </div>
           </Card>
@@ -196,7 +242,7 @@ const ChatInterface = () => {
                       <div className="inline-block p-4 rounded-2xl bg-card border border-border">
                         <div className="flex items-center gap-2">
                           <Loader2 className="h-4 w-4 animate-spin" />
-                          <p className="text-sm text-muted-foreground">AI is thinking...</p>
+                          <p className="text-sm text-muted-foreground">{getTranslation('aiIsThinking', currentLanguage)}</p>
                         </div>
                       </div>
                     </div>
@@ -211,7 +257,7 @@ const ChatInterface = () => {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={(e) => e.key === "Enter" && !isLoading && handleSend()}
-                placeholder="Type your legal question here..."
+                placeholder={getTranslation('typeYourQuestion', currentLanguage)}
                 className="flex-1 rounded-xl"
                 disabled={isLoading}
               />

@@ -1,0 +1,50 @@
+{
+  "embeddedAt": "2025-10-12T17:18:11.840Z",
+  "totalDocuments": 6,
+  "datasets": [
+    {
+      "name": "Indian Law Dataset",
+      "source": "HuggingFace - viber1/indian-law-dataset",
+      "url": "https://huggingface.co/datasets/viber1/indian-law-dataset",
+      "description": "Comprehensive Indian legal documents and case laws"
+    },
+    {
+      "name": "Contract NLI Dataset",
+      "source": "HuggingFace - kiddothe2b/contract-nli",
+      "url": "https://huggingface.co/datasets/kiddothe2b/contract-nli",
+      "description": "Contract analysis and natural language inference data"
+    },
+    {
+      "name": "JusticeHub Legal Data",
+      "source": "JusticeHub.in",
+      "url": "http://justicehub.in/dataset",
+      "description": "Legal and justice datasets from Indian legal professionals"
+    }
+  ],
+  "documents": [
+    {
+      "title": "Right to Information Act, 2005",
+      "source": "Indian Legal Database"
+    },
+    {
+      "title": "Consumer Protection Act, 2019",
+      "source": "Indian Legal Database"
+    },
+    {
+      "title": "Indian Penal Code - Section 375 (Rape)",
+      "source": "Indian Legal Database"
+    },
+    {
+      "title": "Contract Law - Essential Elements",
+      "source": "Indian Legal Database"
+    },
+    {
+      "title": "Supreme Court Guidelines on Right to Privacy",
+      "source": "JusticeHub - Supreme Court Judgments"
+    },
+    {
+      "title": "Consumer Protection in Digital Transactions",
+      "source": "JusticeHub - Consumer Protection Data"
+    }
+  ]
+}

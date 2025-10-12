@@ -1,0 +1,44 @@
+{
+  "documents": [
+    {
+      "id": "doc_1",
+      "title": "Consumer Protection Act 2019",
+      "content": "The Consumer Protection Act 2019 is an Act of the Parliament of India which replaced the Consumer Protection Act 1986. It provides for better protection of the interests of consumers and for the purpose of making provision for establishment of consumer councils and other authorities for the settlement of consumer disputes and for matters connected therewith or incidental thereto. Key provisions include: 1) Establishment of Central Consumer Protection Authority, 2) Product liability provisions, 3) Unfair trade practices, 4) Consumer dispute redressal mechanism, 5) Penalties for violation of consumer rights.",
+      "source": "Ministry of Consumer Affairs",
+      "category": "consumer_protection",
+      "jurisdiction": "India"
+    },
+    {
+      "id": "doc_2", 
+      "title": "Right to Information Act 2005",
+      "content": "The Right to Information Act 2005 is an Act of the Parliament of India to provide for setting out the practical regime of right to information for citizens to secure access to information under the control of public authorities, in order to promote transparency and accountability in the working of every public authority. Key features include: 1) Right to request information from public authorities, 2) Time-bound response (30 days), 3) Appeal mechanism, 4) Penalties for non-compliance, 5) Exemptions for certain categories of information.",
+      "source": "Ministry of Personnel, Public Grievances and Pensions",
+      "category": "right_to_information",
+      "jurisdiction": "India"
+    },
+    {
+      "id": "doc_3",
+      "title": "Indian Contract Act 1872",
+      "content": "The Indian Contract Act 1872 is the main source of contract law in India. It defines the conditions under which the promises made by the parties to a contract shall be legally binding on them. Key elements include: 1) Offer and acceptance, 2) Consideration, 3) Capacity to contract, 4) Free consent, 5) Lawful object and consideration, 6) Performance of contracts, 7) Breach of contract and remedies.",
+      "source": "Ministry of Law and Justice",
+      "category": "contract_law",
+      "jurisdiction": "India"
+    },
+    {
+      "id": "doc_4",
+      "title": "Companies Act 2013",
+      "content": "The Companies Act 2013 is an Act of the Parliament of India on Indian company law which regulates incorporation of a company, responsibilities of a company, directors, dissolution of a company. Key provisions include: 1) Corporate governance requirements, 2) Board composition and responsibilities, 3) Shareholder rights, 4) Corporate social responsibility, 5) Mergers and acquisitions, 6) Winding up procedures.",
+      "source": "Ministry of Corporate Affairs",
+      "category": "corporate_law",
+      "jurisdiction": "India"
+    },
+    {
+      "id": "doc_5",
+      "title": "Information Technology Act 2000",
+      "content": "The Information Technology Act 2000 is an Act of the Indian Parliament notified on 17 October 2000. It is the primary law in India dealing with cybercrime and electronic commerce. Key provisions include: 1) Legal recognition of electronic records and digital signatures, 2) Cybercrime penalties, 3) Data protection and privacy, 4) Electronic governance, 5) Regulation of certifying authorities, 6) Appellate tribunal for cyber laws.",
+      "source": "Ministry of Electronics and Information Technology",
+      "category": "cyber_law",
+      "jurisdiction": "India"
+    }
+  ]
+}

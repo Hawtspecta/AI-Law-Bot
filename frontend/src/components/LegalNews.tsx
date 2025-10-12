@@ -12,8 +12,13 @@ import {
 } from "lucide-react";
 import { apiClient, LegalNewsResponse } from "@/services/api";
 import { toast } from "sonner";
+import { getTranslation } from "@/lib/translations";
 
-const LegalNews = () => {
+interface LegalNewsProps {
+  currentLanguage?: string;
+}
+
+const LegalNews = ({ currentLanguage = 'en' }: LegalNewsProps) => {
   const [news, setNews] = useState<LegalNewsResponse['news']>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedRegion, setSelectedRegion] = useState('India');
@@ -67,11 +72,10 @@ const LegalNews = () => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-16 animate-fade-up">
           <h2 className="text-4xl md:text-5xl font-heading font-bold text-primary mb-4">
-            Legal News & Updates
+            {getTranslation('legalNewsUpdates', currentLanguage)}
           </h2>
           <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-            Stay informed with the latest legal developments, regulatory changes, 
-            and important updates personalized by region and topic.
+            {getTranslation('stayInformed', currentLanguage)}
           </p>
         </div>
 
@@ -116,10 +120,10 @@ const LegalNews = () => {
             {isLoading ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Loading...
+                {getTranslation('loading', currentLanguage)}
               </>
             ) : (
-              'Refresh'
+              getTranslation('refresh', currentLanguage)
             )}
           </Button>
         </div>

@@ -1,17 +1,28 @@
 {
-  "name": "ai-law-app",
+  "name": "ai-legal-assistant",
   "version": "1.0.0",
-  "description": "AI-powered legal assistant application",
+  "description": "AI-powered legal assistant with RAG system",
+  "main": "server.js",
   "scripts": {
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
-    "dev:backend": "cd server && npm run dev",
-    "dev:frontend": "cd frontend && npm run dev",
-    "install:all": "npm install && cd server && npm install && cd ../frontend && npm install",
-    "build": "cd frontend && npm run build",
-    "start": "cd server && npm start"
+    "start": "node server.js",
+    "dev": "node server.js",
+    "embed": "node scripts/embed.js",
+    "test": "node test-server.js",
+    "cleanup": "node scripts/cleanup.js"
   },
-  "devDependencies": {
-    "concurrently": "^8.2.0"
+  "keywords": [
+    "legal",
+    "ai",
+    "rag",
+    "groq",
+    "openai",
+    "indian-law",
+    "legal-assistant"
+  ],
+  "author": "AI Legal Assistant Team",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.6.1"
   },
   "engines": {
     "node": ">=18.0.0"

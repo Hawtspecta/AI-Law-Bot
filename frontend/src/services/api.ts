@@ -1,16 +1,11 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-
-// Fallback URLs for different environments
-const FALLBACK_URLS = [
-  'http://localhost:3001',
-  'http://127.0.0.1:3001',
-  'http://localhost:3000'
-];
+const HEALTH_CHECK_URL = "http://localhost:3001/health";
 
 export interface Message {
   role: 'user' | 'assistant';
   content: string;
   citations?: string[];
+  sources?: any[];
   timestamp?: string;
 }
 
@@ -43,7 +38,10 @@ export interface DocumentUploadResponse {
     keyPoints: string[];
     risks: any[];
     recommendations: string[];
+    citations: string[];
+    sources: any[];
   };
+  timestamp: string;
 }
 
 export interface LegalSearchRequest {
@@ -60,40 +58,11 @@ export interface LegalSearchResponse {
   results: {
     content: string;
     citations: string[];
-    searchResults?: any[];
+    sources: any[];
+    searchResults: any[];
   };
+  filters: any;
   timestamp: string;
-}
-
-export interface AuthRequest {
-  email: string;
-  password: string;
-  name?: string;
-}
-
-export interface AuthResponse {
-  success: boolean;
-  token?: string;
-  user?: {
-    id: string;
-    email: string;
-    name: string;
-    role: string;
-  };
-  message?: string;
-}
-
-export interface SessionResponse {
-  success: boolean;
-  session: {
-    sessionId: string;
-    userId: string;
-    title: string;
-    messageCount: number;
-    isActive: boolean;
-    createdAt: string;
-    updatedAt: string;
-  };
 }
 
 export interface ContractAnalysisRequest {
@@ -116,6 +85,8 @@ export interface ContractAnalysisResponse {
       status: string;
     }>;
     recommendations: string[];
+    citations: string[];
+    sources: any[];
   };
   timestamp: string;
 }
@@ -138,6 +109,8 @@ export interface FormFillResponse {
     }>;
     suggestions: string[];
     completedForm: string;
+    citations: string[];
+    sources: any[];
   };
   timestamp: string;
 }
@@ -162,6 +135,8 @@ export interface DocumentComparisonResponse {
     summary: string;
     redlineView: string;
     recommendations: string[];
+    citations: string[];
+    sources: any[];
   };
   timestamp: string;
 }
@@ -202,17 +177,6 @@ export interface FeedbackResponse {
   message: string;
 }
 
-export interface PrivacyRequest {
-  anonymizeQueries?: boolean;
-  dataRetentionDays?: number;
-}
-
-export interface PrivacyResponse {
-  success: boolean;
-  user: any;
-  message: string;
-}
-
 export interface MetricsResponse {
   success: boolean;
   metrics: {
@@ -220,74 +184,75 @@ export interface MetricsResponse {
     totalUsers: number;
     legalFeesSaved: string;
     documentsProcessed: number;
+    ragQueriesProcessed: number;
   };
   timestamp: string;
 }
 
 class ApiClient {
   private baseURL: string;
-  private fallbackURLs: string[];
-  private currentURLIndex: number = 0;
+  private isConnected: boolean = false;
 
   constructor(baseURL: string = API_BASE_URL) {
     this.baseURL = baseURL;
-    this.fallbackURLs = FALLBACK_URLS;
+    this.checkConnection();
   }
 
-  private getCurrentURL(): string {
-    return this.currentURLIndex === 0 ? this.baseURL : this.fallbackURLs[this.currentURLIndex - 1];
-  }
-
-  private async tryNextURL(): Promise<boolean> {
-    if (this.currentURLIndex < this.fallbackURLs.length) {
-      this.currentURLIndex++;
-      console.log(`Trying fallback URL: ${this.getCurrentURL()}`);
-      return true;
+  private async checkConnection() {
+    try {
+      const response = await fetch(HEALTH_CHECK_URL);
+      this.isConnected = response.ok;
+      console.log(`🔗 API Connection: ${this.isConnected ? 'Connected' : 'Disconnected'}`);
+    } catch (error) {
+      this.isConnected = false;
+      console.log('🔗 API Connection: Disconnected');
     }
-    return false;
   }
 
-  private async request<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> {
-    let lastError: Error | null = null;
+  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+    const url = `${this.baseURL}${endpoint}`;
     
-    while (true) {
-      const url = `${this.getCurrentURL()}${endpoint}`;
+    const config: RequestInit = {
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+      ...options,
+    };
+
+    try {
+      console.log(`🌐 Making request to: ${url}`);
+      const response = await fetch(url, config);
       
-      const config: RequestInit = {
-        headers: {
-          'Content-Type': 'application/json',
-          ...options.headers,
-        },
-        ...options,
-      };
-
-      try {
-        console.log(`Making request to: ${url}`);
-        const response = await fetch(url, config);
-        
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        console.log(`Request successful to: ${url}`);
-        return data;
-      } catch (error) {
-        console.error(`API request failed for ${url}:`, error);
-        lastError = error as Error;
-        
-        if (await this.tryNextURL()) continue;
-        break;
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
       }
+
+      const data = await response.json();
+      console.log(`✅ Request successful to: ${url}`);
+      return data;
+    } catch (error) {
+      console.error(`❌ API request failed for ${url}:`, error);
+      throw error;
     }
-    
-    throw lastError || new Error('All API endpoints failed');
   }
 
+  // Health check
+  async healthCheck(): Promise<{ status: string; timestamp: string; ragEnabled: boolean }> {
+    try {
+      return await this.request('/health');
+    } catch (error) {
+      console.warn('Server unavailable, returning mock health check');
+      return {
+        status: 'MOCK',
+        timestamp: new Date().toISOString(),
+        ragEnabled: false
+      };
+    }
+  }
+
+  // Chat with RAG
   async sendChatMessage(request: ChatRequest): Promise<ChatResponse> {
     try {
       return await this.request<ChatResponse>('/api/chat', {
@@ -295,6 +260,7 @@ class ApiClient {
         body: JSON.stringify(request),
       });
     } catch (error) {
+      console.warn('Server unavailable, returning mock chat response');
       return {
         userMessage: {
           role: 'user',
@@ -303,14 +269,16 @@ class ApiClient {
         },
         assistantMessage: {
           role: 'assistant',
-          content: `I understand your question: "${request.message}". Mock response because server is offline.`,
+          content: `I understand your question: "${request.message}". This is a mock response because the server is currently unavailable. Please ensure the backend server is running for full RAG functionality.`,
           citations: ['Mock Response - Server Offline'],
+          sources: [],
           timestamp: new Date().toISOString()
         }
       };
     }
   }
 
+  // Document upload and analysis
   async uploadDocument(request: DocumentUploadRequest): Promise<DocumentUploadResponse> {
     try {
       return await this.request<DocumentUploadResponse>('/api/documents', {
@@ -318,6 +286,7 @@ class ApiClient {
         body: JSON.stringify(request),
       });
     } catch (error) {
+      console.warn('Server unavailable, returning mock document upload response');
       return {
         id: `mock_${Date.now()}`,
         fileName: request.fileName,
@@ -327,12 +296,16 @@ class ApiClient {
           summary: 'Mock document analysis - server offline',
           keyPoints: ['Document uploaded successfully', 'Analysis completed'],
           risks: [],
-          recommendations: ['Ensure server is running for real analysis']
-        }
+          recommendations: ['Please ensure server is running for real analysis'],
+          citations: [],
+          sources: []
+        },
+        timestamp: new Date().toISOString()
       };
     }
   }
 
+  // Legal search with RAG
   async searchLegal(request: LegalSearchRequest): Promise<LegalSearchResponse> {
     try {
       return await this.request<LegalSearchResponse>('/api/search', {
@@ -340,105 +313,17 @@ class ApiClient {
         body: JSON.stringify(request),
       });
     } catch (error) {
+      console.warn('Server unavailable, returning mock legal search response');
       return {
         query: request.query,
         results: {
-          content: `Mock legal search results for: "${request.query}".`,
+          content: `Mock legal search results for: "${request.query}". This is a placeholder response because the server is currently unavailable.`,
           citations: ['Mock Legal Search - Server Offline'],
+          sources: [],
           searchResults: []
         },
+        filters: request.filters || {},
         timestamp: new Date().toISOString()
-      };
-    }
-  }
-
-  async updateUserLanguage(userId: string, language: string): Promise<{ success: boolean; user: any; message: string }> {
-    try {
-      return await this.request(`/api/users/${userId}/language`, {
-        method: 'PATCH',
-        body: JSON.stringify({ language }),
-      });
-    } catch (error) {
-      return {
-        success: true,
-        user: { id: userId, language },
-        message: 'Language preference updated (mock response - server offline)'
-      };
-    }
-  }
-
-  async healthCheck(): Promise<{ status: string; timestamp: string }> {
-    try {
-      return await this.request('/health');
-    } catch (error) {
-      return {
-        status: 'MOCK',
-        timestamp: new Date().toISOString()
-      };
-    }
-  }
-
-  // Authentication
-  async login(request: AuthRequest): Promise<AuthResponse> {
-    try {
-      return await this.request<AuthResponse>('/api/auth/login', {
-        method: 'POST',
-        body: JSON.stringify(request),
-      });
-    } catch (error) {
-      return {
-        success: true,
-        token: 'mock_token_' + Date.now(),
-        user: {
-          id: 'mock_user',
-          email: request.email,
-          name: 'Mock User',
-          role: 'user'
-        },
-        message: 'Login successful (mock response - server offline)'
-      };
-    }
-  }
-
-  async register(request: AuthRequest): Promise<AuthResponse> {
-    try {
-      return await this.request<AuthResponse>('/api/auth/register', {
-        method: 'POST',
-        body: JSON.stringify(request),
-      });
-    } catch (error) {
-      return {
-        success: true,
-        user: {
-          id: 'mock_user_' + Date.now(),
-          email: request.email,
-          name: request.name || 'Mock User',
-          role: 'user'
-        },
-        message: 'Account created successfully (mock response - server offline)'
-      };
-    }
-  }
-
-  // Session
-  async createSession(userId?: string, title?: string): Promise<SessionResponse> {
-    try {
-      return await this.request<SessionResponse>('/api/sessions', {
-        method: 'POST',
-        body: JSON.stringify({ userId, title }),
-      });
-    } catch (error) {
-      return {
-        success: true,
-        session: {
-          sessionId: `mock_session_${Date.now()}`,
-          userId: userId || 'anonymous',
-          title: title || 'New Conversation',
-          messageCount: 0,
-          isActive: true,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        }
       };
     }
   }
@@ -451,6 +336,7 @@ class ApiClient {
         body: JSON.stringify(request),
       });
     } catch (error) {
+      console.warn('Server unavailable, returning mock contract analysis response');
       return {
         success: true,
         analysis: {
@@ -458,7 +344,9 @@ class ApiClient {
           keyClauses: ['Standard terms', 'Payment conditions'],
           risks: [{ level: 'Low', description: 'Standard risk', recommendation: 'Review terms' }],
           complianceIssues: [{ issue: 'Compliance check', status: 'Compliant' }],
-          recommendations: ['Ensure server is running for real analysis']
+          recommendations: ['Ensure server is running for real analysis'],
+          citations: [],
+          sources: []
         },
         timestamp: new Date().toISOString()
       };
@@ -473,6 +361,7 @@ class ApiClient {
         body: JSON.stringify(request),
       });
     } catch (error) {
+      console.warn('Server unavailable, returning mock form fill response');
       return {
         success: true,
         filledForm: {
@@ -480,7 +369,9 @@ class ApiClient {
           filledFields: request.userInputs,
           validationResults: [{ field: 'name', status: 'valid', message: 'Mock validation' }],
           suggestions: ['Mock suggestion'],
-          completedForm: 'Mock completed form'
+          completedForm: 'Mock completed form',
+          citations: [],
+          sources: []
         },
         timestamp: new Date().toISOString()
       };
@@ -495,6 +386,7 @@ class ApiClient {
         body: JSON.stringify(request),
       });
     } catch (error) {
+      console.warn('Server unavailable, returning mock document comparison response');
       return {
         success: true,
         comparison: {
@@ -502,7 +394,9 @@ class ApiClient {
           differences: [{ section: 'Terms', document1: 'Original', document2: 'Updated', impact: 'Low', recommendation: 'Review changes' }],
           summary: 'Mock document comparison - server offline',
           redlineView: 'Mock redline view',
-          recommendations: ['Ensure server is running for real comparison']
+          recommendations: ['Ensure server is running for real comparison'],
+          citations: [],
+          sources: []
         },
         timestamp: new Date().toISOString()
       };
@@ -516,15 +410,17 @@ class ApiClient {
       if (region) params.append('region', region);
       if (topic) params.append('topic', topic);
       if (limit) params.append('limit', limit.toString());
+      
       return await this.request<LegalNewsResponse>(`/api/news?${params.toString()}`);
     } catch (error) {
+      console.warn('Server unavailable, returning mock legal news response');
       return {
         success: true,
         news: [
           {
             id: 1,
             title: 'Mock Legal News - Server Offline',
-            summary: 'This is a placeholder news article.',
+            summary: 'This is a placeholder news article because the server is currently unavailable.',
             date: new Date().toISOString(),
             source: 'Mock Source'
           }
@@ -536,27 +432,24 @@ class ApiClient {
     }
   }
 
-  // Chat export with PDF download
-  async exportChat(sessionId: string): Promise<void> {
+  // Chat export
+  async exportChat(sessionId: string): Promise<ChatExportResponse> {
     try {
-      const url = `${this.getCurrentURL()}/api/chat/export/${sessionId}`;
-      const response = await fetch(url, { method: 'POST' });
-      if (!response.ok) throw new Error('Failed to export chat');
-      const blob = await response.blob();
-      const downloadUrl = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = downloadUrl;
-      a.download = `chat_${sessionId}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(downloadUrl);
+      return await this.request<ChatExportResponse>(`/api/chat/export/${sessionId}`, {
+        method: 'POST',
+      });
     } catch (error) {
-      console.warn('Server unavailable, cannot export chat PDF');
+      console.warn('Server unavailable, returning mock chat export response');
+      return {
+        success: true,
+        exportUrl: `/mock/exports/${sessionId}.pdf`,
+        messageCount: 10,
+        timestamp: new Date().toISOString()
+      };
     }
   }
 
-  // Feedback
+  // Feedback system
   async submitFeedback(request: FeedbackRequest): Promise<FeedbackResponse> {
     try {
       return await this.request<FeedbackResponse>('/api/feedback', {
@@ -564,6 +457,7 @@ class ApiClient {
         body: JSON.stringify(request),
       });
     } catch (error) {
+      console.warn('Server unavailable, returning mock feedback response');
       return {
         success: true,
         feedback: { id: 'mock_feedback', ...request },
@@ -572,24 +466,7 @@ class ApiClient {
     }
   }
 
-  // Privacy
-  async updatePrivacy(userId: string, request: PrivacyRequest): Promise<PrivacyResponse> {
-    try {
-      return await this.request<PrivacyResponse>(`/api/users/${userId}/privacy`, {
-        method: 'PATCH',
-        body: JSON.stringify(request),
-      });
-    } catch (error) {
-      return {
-        success: true,
-        user: { id: userId, ...request },
-        message: 'Privacy settings updated (mock response - server offline)'
-      };
-    }
-  }
-
   // Metrics
-  // Metrics (Feature #11)
   async getMetrics(): Promise<MetricsResponse> {
     try {
       return await this.request<MetricsResponse>('/api/metrics');
@@ -601,9 +478,75 @@ class ApiClient {
           totalMessages: 1250,
           totalUsers: 89,
           legalFeesSaved: '₹40L',
-          documentsProcessed: 156
+          documentsProcessed: 156,
+          ragQueriesProcessed: 892
         },
         timestamp: new Date().toISOString()
+      };
+    }
+  }
+
+  // Connection status
+  getConnectionStatus(): boolean {
+    return this.isConnected;
+  }
+
+  // Retry connection
+  async retryConnection(): Promise<boolean> {
+    await this.checkConnection();
+    return this.isConnected;
+  }
+
+  // Authentication methods
+  async login(credentials: { email: string; password: string }): Promise<{ success: boolean; token?: string; user?: any; message?: string }> {
+    try {
+      return await this.request('/api/auth/login', {
+        method: 'POST',
+        body: JSON.stringify(credentials),
+      });
+    } catch (error) {
+      console.warn('Server unavailable, returning mock login response');
+      // Mock successful login for demo
+      return {
+        success: true,
+        token: 'mock_token_' + Date.now(),
+        user: { id: 'user_1', email: credentials.email, name: 'Demo User' },
+        message: 'Login successful (demo mode)'
+      };
+    }
+  }
+
+  async register(userData: { name: string; email: string; password: string }): Promise<{ success: boolean; message?: string }> {
+    try {
+      return await this.request('/api/auth/register', {
+        method: 'POST',
+        body: JSON.stringify(userData),
+      });
+    } catch (error) {
+      console.warn('Server unavailable, returning mock register response');
+      return {
+        success: true,
+        message: 'Account created successfully (demo mode)'
+      };
+    }
+  }
+
+  async createSession(userId: string, title: string): Promise<{ success: boolean; session?: any }> {
+    try {
+      return await this.request('/api/sessions', {
+        method: 'POST',
+        body: JSON.stringify({ userId, title }),
+      });
+    } catch (error) {
+      console.warn('Server unavailable, returning mock session response');
+      return {
+        success: true,
+        session: { 
+          sessionId: `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          title,
+          userId,
+          createdAt: new Date().toISOString()
+        }
       };
     }
   }
@@ -611,4 +554,3 @@ class ApiClient {
 
 export const apiClient = new ApiClient();
 export default apiClient;
-

@@ -13,8 +13,13 @@ import {
 } from "lucide-react";
 import { apiClient, MetricsResponse } from "@/services/api";
 import { toast } from "sonner";
+import { getTranslation } from "@/lib/translations";
 
-const Hero = () => {
+interface HeroProps {
+  currentLanguage?: string;
+}
+
+const Hero = ({ currentLanguage = 'en' }: HeroProps) => {
   const [metrics, setMetrics] = useState<MetricsResponse['metrics'] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -39,15 +44,31 @@ const Hero = () => {
       // Create new session (Feature #9)
       const response = await apiClient.createSession('anonymous', 'New Conversation');
       if (response.success) {
+        // Store session ID for chat interface
+        localStorage.setItem('currentSessionId', response.session.sessionId);
+        
         // Scroll to chat interface
         const chatElement = document.getElementById('ask-a-question');
         if (chatElement) {
           chatElement.scrollIntoView({ behavior: 'smooth' });
         }
         toast.success('New chat session started!');
+      } else {
+        // Even if session creation fails, still scroll to chat
+        const chatElement = document.getElementById('ask-a-question');
+        if (chatElement) {
+          chatElement.scrollIntoView({ behavior: 'smooth' });
+        }
+        toast.success('Chat interface opened!');
       }
     } catch (error) {
-      toast.error('Failed to start chat session');
+      console.warn('Session creation failed, but opening chat anyway:', error);
+      // Even if session creation fails, still scroll to chat
+      const chatElement = document.getElementById('ask-a-question');
+      if (chatElement) {
+        chatElement.scrollIntoView({ behavior: 'smooth' });
+      }
+      toast.success('Chat interface opened!');
     } finally {
       setIsLoading(false);
     }
@@ -77,14 +98,12 @@ const Hero = () => {
               </div>
               
               <h1 className="text-4xl md:text-6xl font-heading font-bold text-primary leading-tight">
-                Simplify Legal Help with{" "}
-                <span className="text-accent">Reliable AI</span>
+                {getTranslation('heroTitle', currentLanguage)}{" "}
+                <span className="text-accent">{getTranslation('heroSubtitle', currentLanguage)}</span>
               </h1>
               
               <p className="text-lg text-muted-foreground max-w-2xl leading-relaxed">
-                Get instant, citation-backed legal answers in simple language. 
-                Upload documents, analyze contracts, and access legal research 
-                powered by advanced AI technology.
+                {getTranslation('heroDescription', currentLanguage)}
               </p>
             </div>
 
@@ -98,7 +117,7 @@ const Hero = () => {
                 className="glow-primary flex items-center space-x-2"
               >
                 <MessageSquare className="h-5 w-5" />
-                <span>{isLoading ? 'Starting...' : 'Start Chat'}</span>
+                <span>{isLoading ? 'Starting...' : getTranslation('startChat', currentLanguage)}</span>
                 <ArrowRight className="h-5 w-5" />
               </Button>
 
@@ -109,7 +128,7 @@ const Hero = () => {
                 onClick={handleLearnMore}
                 className="flex items-center space-x-2"
               >
-                <span>Learn More</span>
+                <span>{getTranslation('learnMore', currentLanguage)}</span>
                 <ArrowRight className="h-5 w-5" />
               </Button>
             </div>
@@ -135,7 +154,7 @@ const Hero = () => {
           <div className="space-y-6 animate-fade-in">
             <div className="text-center mb-8">
               <h3 className="text-2xl font-heading font-semibold text-primary mb-2">
-                Trusted by Thousands
+                {getTranslation('trustedBy', currentLanguage)}
               </h3>
               <p className="text-muted-foreground">
                 Real statistics from our platform
@@ -152,7 +171,7 @@ const Hero = () => {
                   {metrics?.legalFeesSaved || '₹40L'}
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  Legal Fees Saved
+                  {getTranslation('legalFeesSaved', currentLanguage)}
                 </div>
               </Card>
 
@@ -165,7 +184,7 @@ const Hero = () => {
                   {metrics?.totalUsers || '89'}+
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  Active Users
+                  {getTranslation('activeUsers', currentLanguage)}
                 </div>
               </Card>
 
@@ -178,7 +197,7 @@ const Hero = () => {
                   {metrics?.documentsProcessed || '156'}+
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  Documents Processed
+                  {getTranslation('documentsProcessed', currentLanguage)}
                 </div>
               </Card>
 
@@ -191,7 +210,7 @@ const Hero = () => {
                   {metrics?.totalMessages || '1,250'}+
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  Questions Answered
+                  {getTranslation('questionsAnswered', currentLanguage)}
                 </div>
               </Card>
             </div>
