@@ -2,7 +2,7 @@ const fs = require('fs').promises;
 const path = require('path');
 require('dotenv').config();
 
-const GROQ_API_KEY = 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;
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
 
 // Simple in-memory vector store (in production, use ChromaDB or FAISS)

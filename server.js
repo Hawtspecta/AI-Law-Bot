@@ -99,7 +99,7 @@ async function fetchLegalNews(region, topic, limit) {
 }
 
 const PORT = process.env.PORT || 3001;
-const GROQ_API_KEY = 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;
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
 
 if (!GROQ_API_KEY && !OPENAI_API_KEY) {
