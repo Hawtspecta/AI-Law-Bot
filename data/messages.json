@@ -16,5 +16,59 @@
     "citations": "[]",
     "sources": "[]",
     "timestamp": "2025-10-12T17:09:06.251Z"
+  },
+  {
+    "id": "msg_1760293677969_jtwke8lpf",
+    "userId": "anonymous",
+    "sessionId": "session_1760289644692_gdin43u5j",
+    "role": "user",
+    "content": "hi",
+    "timestamp": "2025-10-12T18:27:57.969Z"
+  },
+  {
+    "id": "msg_1760293677972_c8b442kbu",
+    "userId": "anonymous",
+    "sessionId": "session_1760289644692_gdin43u5j",
+    "role": "assistant",
+    "content": "I apologize, but I encountered an error while processing your legal query: \"hi\". Please try rephrasing your question or contact support if the issue persists.",
+    "citations": "[]",
+    "sources": "[]",
+    "timestamp": "2025-10-12T18:27:57.972Z"
+  },
+  {
+    "id": "msg_1760293690152_j163ejby0",
+    "userId": "anonymous",
+    "sessionId": "session_1760289644692_gdin43u5j",
+    "role": "user",
+    "content": "what is law",
+    "timestamp": "2025-10-12T18:28:10.152Z"
+  },
+  {
+    "id": "msg_1760293690154_4vnac5z0t",
+    "userId": "anonymous",
+    "sessionId": "session_1760289644692_gdin43u5j",
+    "role": "assistant",
+    "content": "I apologize, but I encountered an error while processing your legal query: \"what is law\". Please try rephrasing your question or contact support if the issue persists.",
+    "citations": "[]",
+    "sources": "[]",
+    "timestamp": "2025-10-12T18:28:10.154Z"
+  },
+  {
+    "id": "msg_1760294061681_lzgf503v3",
+    "userId": "anonymous",
+    "sessionId": "session_1760289644692_gdin43u5j",
+    "role": "user",
+    "content": "hi",
+    "timestamp": "2025-10-12T18:34:21.681Z"
+  },
+  {
+    "id": "msg_1760294061683_1zhd853os",
+    "userId": "anonymous",
+    "sessionId": "session_1760289644692_gdin43u5j",
+    "role": "assistant",
+    "content": "I apologize, but I encountered an error while processing your legal query: \"hi\". Please try rephrasing your question or contact support if the issue persists.",
+    "citations": "[]",
+    "sources": "[]",
+    "timestamp": "2025-10-12T18:34:21.683Z"
   }
 ]

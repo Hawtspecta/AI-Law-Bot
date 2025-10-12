@@ -63,8 +63,12 @@ const Header = ({ onLanguageChange, currentLanguage = 'en' }: HeaderProps) => {
         // Store token and user data
         localStorage.setItem('token', response.token || '');
         localStorage.setItem('user', JSON.stringify(response.user));
+        // Don't refresh the page, just update the UI
+      } else {
+        toast.error(response.message || 'Login failed. Please try again.');
       }
     } catch (error) {
+      console.error('Login error:', error);
       toast.error('Login failed. Please try again.');
     } finally {
       setIsLoading(false);
@@ -84,8 +88,12 @@ const Header = ({ onLanguageChange, currentLanguage = 'en' }: HeaderProps) => {
         toast.success('Account created successfully!');
         setIsSignupOpen(false);
         setSignupForm({ email: '', password: '', name: '' });
+        // Don't refresh the page, just update the UI
+      } else {
+        toast.error(response.message || 'Registration failed. Please try again.');
       }
     } catch (error) {
+      console.error('Registration error:', error);
       toast.error('Registration failed. Please try again.');
     } finally {
       setIsLoading(false);
@@ -276,7 +284,7 @@ const Header = ({ onLanguageChange, currentLanguage = 'en' }: HeaderProps) => {
       {isLoginOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="absolute inset-0" onClick={() => setIsLoginOpen(false)}></div>
-          <Card className="w-full max-w-md p-6 relative z-10">
+          <Card className="w-full max-w-md p-6 relative z-10 mx-auto">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold">{getTranslation('login', currentLanguage)}</h2>
               <Button variant="ghost" size="sm" onClick={() => setIsLoginOpen(false)}>
@@ -308,7 +316,7 @@ const Header = ({ onLanguageChange, currentLanguage = 'en' }: HeaderProps) => {
       {isSignupOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="absolute inset-0" onClick={() => setIsSignupOpen(false)}></div>
-          <Card className="w-full max-w-md p-6 relative z-10">
+          <Card className="w-full max-w-md p-6 relative z-10 mx-auto">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold">{getTranslation('signUp', currentLanguage)}</h2>
               <Button variant="ghost" size="sm" onClick={() => setIsSignupOpen(false)}>

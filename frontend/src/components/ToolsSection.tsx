@@ -15,6 +15,7 @@ import {
 import { apiClient } from "@/services/api";
 import { toast } from "sonner";
 import { getTranslation } from "@/lib/translations";
+import { useNavigate } from "react-router-dom";
 
 interface ToolsSectionProps {
   currentLanguage?: string;
@@ -22,6 +23,7 @@ interface ToolsSectionProps {
 
 const ToolsSection = ({ currentLanguage = 'en' }: ToolsSectionProps) => {
   const [isLoading, setIsLoading] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const handleToolDemo = async (toolType: string) => {
     setIsLoading(toolType);
@@ -29,65 +31,23 @@ const ToolsSection = ({ currentLanguage = 'en' }: ToolsSectionProps) => {
     try {
       switch (toolType) {
         case 'legal-research':
-          // Feature #17: Legal Research Tool - Open dedicated search interface
-          const searchResponse = await apiClient.searchLegal({
-            query: "consumer protection act 2019",
-            filters: { category: "consumer", jurisdiction: "India" },
-            userId: "anonymous"
-          });
-          
-          // Show results in a modal or redirect to search page
-          toast.success("Legal research completed! Vector search performed using Pinecone. Check console for detailed results.");
-          console.log("Legal Research Results:", searchResponse);
-          
-          // In a real implementation, you would open a dedicated search interface
-          // For now, we'll show the results in console and toast
+          // Navigate to legal research page
+          navigate('/legal-research');
           break;
 
         case 'contract-analyzer':
-          // Feature #18: Contract Analyzer - Open contract analysis page
-          const contractResponse = await apiClient.analyzeContract({
-            contractContent: "This is a sample service agreement contract for analysis. The contract includes standard terms and conditions, liability clauses, payment terms, termination clauses, and dispute resolution mechanisms. The contract specifies a 30-day payment term and includes force majeure provisions.",
-            contractType: "Service Agreement"
-          });
-          
-          toast.success("Contract analysis completed! NLP/ML clause extraction and risk assessment performed. Check console for detailed results.");
-          console.log("Contract Analysis Results:", contractResponse);
+          // Navigate to contract analyzer page
+          navigate('/contract-analyzer');
           break;
 
         case 'form-assistance':
-          // Feature #19: Legal Forms - Open form assistance page
-          const formResponse = await apiClient.fillForm({
-            formType: "Consumer Complaint Form",
-            userInputs: {
-              name: "John Doe",
-              email: "john@example.com",
-              complaint: "Defective product received",
-              amount: "5000",
-              productName: "Smartphone",
-              purchaseDate: "2024-01-15"
-            },
-            conditions: {
-              validateEmail: true,
-              requireAmount: true,
-              validateDate: true
-            }
-          });
-          
-          toast.success("Form assistance completed! Logic-based validation performed against PostgreSQL requirements. Check console for detailed results.");
-          console.log("Form Assistance Results:", formResponse);
+          // Navigate to form assistance page
+          navigate('/form-assistance');
           break;
 
         case 'document-comparator':
-          // Feature #20: Document Comparator - Open comparison interface
-          const comparisonResponse = await apiClient.compareDocuments({
-            document1: "Original service agreement with 30-day payment terms, standard liability clauses, and basic termination provisions. The contract includes standard force majeure language and dispute resolution through arbitration.",
-            document2: "Updated service agreement with 45-day payment terms, enhanced liability clauses with caps, detailed termination provisions, and comprehensive force majeure language. Dispute resolution now includes mediation before arbitration.",
-            comparisonType: "contract"
-          });
-          
-          toast.success("Document comparison completed! Natural Language Inference (NLI) analysis performed. Visual redline view generated. Check console for detailed results.");
-          console.log("Document Comparison Results:", comparisonResponse);
+          // Navigate to document comparator page
+          navigate('/document-comparator');
           break;
 
         default:
@@ -95,7 +55,7 @@ const ToolsSection = ({ currentLanguage = 'en' }: ToolsSectionProps) => {
       }
     } catch (error) {
       console.error(`${toolType} error:`, error);
-      toast.error(`Failed to run ${toolType} demo`);
+      toast.error(`Failed to open ${toolType} tool`);
     } finally {
       setIsLoading(null);
     }

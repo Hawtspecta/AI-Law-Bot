@@ -12,43 +12,44 @@ const db = require('./database');
 async function fetchLegalNews(region, topic, limit) {
   try {
     // In a real implementation, you would use a news API like NewsAPI, RSS feeds, or web scraping
-    // For now, we'll return enhanced mock data that simulates real news
+    // For now, we'll return enhanced mock data that simulates real news with current dates
     
+    const currentDate = new Date();
     const newsSources = {
       'India': [
         {
           id: 1,
           title: 'Supreme Court Upholds Right to Privacy in Digital Age',
           summary: 'The Supreme Court has reinforced the fundamental right to privacy in the digital era, setting new precedents for data protection and digital rights.',
-          date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+          date: new Date(currentDate.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
           source: 'The Hindu Legal'
         },
         {
           id: 2,
           title: 'New Consumer Protection Rules Come into Effect',
           summary: 'Enhanced consumer protection regulations now provide stronger safeguards for online transactions and digital services, with stricter penalties for violations.',
-          date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+          date: new Date(currentDate.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(),
           source: 'Economic Times'
         },
         {
           id: 3,
           title: 'Corporate Law Amendments Focus on ESG Compliance',
           summary: 'Recent amendments to corporate law emphasize environmental, social, and governance (ESG) compliance requirements for listed companies.',
-          date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+          date: new Date(currentDate.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(),
           source: 'Business Standard'
         },
         {
           id: 4,
           title: 'Data Protection Bill Passes Parliamentary Committee Review',
           summary: 'The Digital Personal Data Protection Bill has cleared the parliamentary committee stage with recommendations for enhanced privacy safeguards.',
-          date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+          date: new Date(currentDate.getTime() - 4 * 24 * 60 * 60 * 1000).toISOString(),
           source: 'Live Law'
         },
         {
           id: 5,
           title: 'Labour Law Reforms Implemented Across States',
           summary: 'New labour codes are being implemented across various states, streamlining employment regulations and worker protection measures.',
-          date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+          date: new Date(currentDate.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString(),
           source: 'Indian Express'
         }
       ],
@@ -57,14 +58,14 @@ async function fetchLegalNews(region, topic, limit) {
           id: 6,
           title: 'Supreme Court Rules on AI and Copyright Law',
           summary: 'Landmark decision establishes framework for AI-generated content and intellectual property rights in the digital age.',
-          date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+          date: new Date(currentDate.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(),
           source: 'Legal Tech News'
         },
         {
           id: 7,
           title: 'New Federal Data Privacy Legislation Introduced',
           summary: 'Comprehensive federal data privacy bill aims to create uniform standards across all states for consumer data protection.',
-          date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+          date: new Date(currentDate.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
           source: 'Privacy Law Journal'
         }
       ]
@@ -100,7 +101,7 @@ async function fetchLegalNews(region, topic, limit) {
 
 const PORT = process.env.PORT || 3001;
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
-
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 if (!GROQ_API_KEY && !OPENAI_API_KEY) {
   console.warn('⚠️  Warning: No API keys found. Running in demo mode with mock responses.');
@@ -153,7 +154,8 @@ const routes = {
       timestamp: new Date().toISOString(),
       ragEnabled: true,
       groqApiKey: !!GROQ_API_KEY,
-      openaiApiKey: !!OPENAI_API_KEY
+      openaiApiKey: !!OPENAI_API_KEY,
+      apiKeysConfigured: !!(GROQ_API_KEY || OPENAI_API_KEY)
     });
   },
 

@@ -95,8 +95,9 @@ const vectorStore = new SimpleVectorStore();
 // Get embeddings from OpenAI or Groq
 async function getEmbedding(text) {
   try {
-    if (!process.env.GROQ_API_KEY) {
-      throw new Error("❌ GROQ_API_KEY is missing in environment variables.");
+    if (!process.env.GROQ_API_KEY && !process.env.OPENAI_API_KEY) {
+      console.warn('⚠️  No API keys available, using simple embedding fallback');
+      return generateSimpleEmbedding(text);
     }
 
     const response = await fetch("https://api.groq.com/openai/v1/embeddings", {
@@ -206,6 +207,10 @@ async function generateResponse(prompt, language = 'en') {
 
       const data = await response.json();
       return data.choices[0].message.content;
+    } else {
+      // Fallback when no API keys are available
+      console.warn('⚠️  No API keys available, using fallback response');
+      return `I understand your legal question: "${prompt.split('\n')[0]}". However, I'm currently running in demo mode without AI capabilities. To get real AI-powered legal assistance, please ensure the GROQ_API_KEY is configured in the .env file. For now, I can provide general legal guidance, but for specific legal advice, please consult with a qualified legal professional.`;
     }
   } catch (error) {
     console.error('❌ Response generation error:', error);

@@ -22,8 +22,8 @@ const Index = () => {
 
   const handleLanguageChange = (language: string) => {
     setCurrentLanguage(language);
-    // Force re-render of all components
-    window.location.reload();
+    // Update localStorage and trigger re-render without page reload
+    localStorage.setItem('selectedLanguage', language);
   };
 
   return (
