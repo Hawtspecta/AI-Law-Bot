@@ -1,5 +1,24 @@
-import dotenv from "dotenv";
+import * as dotenv from 'dotenv';
+import * as path from 'path';
 dotenv.config();
+require('dotenv').config();
+// Manually specify the .env path
+const envPath = path.resolve(__dirname, '.env');
+console.log('Loading .env from:', envPath);
+
+const result = dotenv.config({ path: envPath });
+
+if (result.error) {
+  console.error('❌ Error loading .env:', result.error);
+} else {
+  console.log('✅ Loaded variables:', Object.keys(result.parsed || {}));
+}
+
+// Now check if GROQ_API_KEY is loaded
+console.log('GROQ_API_KEY:', process.env.GROQ_API_KEY ? 'Present' : 'Missing');
+
+// Rest of your imports
+import './backend/aiServices';
 
 import express from "express";
 import cors from "cors";
