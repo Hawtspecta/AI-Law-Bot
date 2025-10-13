@@ -1,3 +1,4 @@
+
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
@@ -12,37 +13,43 @@ import {
   Clock,
   Award
 } from "lucide-react";
+import { getTranslation } from "@/lib/translations";
 
-const HowItWorks = () => {
+interface HowItWorksProps {
+  currentLanguage?: string;
+}
+
+
+const HowItWorks = ({ currentLanguage = 'en' }: HowItWorksProps) => {
   const steps = [
     {
       number: 1,
-      title: "Ask Your Question",
-      description: "Simply type your legal question in plain language. Our AI understands context and provides relevant answers.",
+      title: getTranslation('askYourQuestion', currentLanguage),
+      description: getTranslation('howItWorksStep1', currentLanguage) || getTranslation('howItWorksDescription', currentLanguage),
       icon: MessageSquare,
       color: "text-blue-500",
       bgColor: "bg-blue-500/10"
     },
     {
       number: 2,
-      title: "Upload Documents",
-      description: "Upload contracts, agreements, or legal documents for analysis. Our AI extracts key information and identifies risks.",
+      title: getTranslation('uploadDocuments', currentLanguage),
+      description: getTranslation('howItWorksStep2', currentLanguage) || '',
       icon: Upload,
       color: "text-green-500",
       bgColor: "bg-green-500/10"
     },
     {
       number: 3,
-      title: "AI Analysis",
-      description: "Our advanced AI processes your query using legal databases, case law, and regulatory information.",
+      title: getTranslation('aiAnalysis', currentLanguage),
+      description: getTranslation('howItWorksStep3', currentLanguage) || '',
       icon: Brain,
       color: "text-purple-500",
       bgColor: "bg-purple-500/10"
     },
     {
       number: 4,
-      title: "Get Results",
-      description: "Receive detailed answers with citations, risk assessments, and actionable recommendations.",
+      title: getTranslation('getResults', currentLanguage),
+      description: getTranslation('howItWorksStep4', currentLanguage) || '',
       icon: FileText,
       color: "text-orange-500",
       bgColor: "bg-orange-500/10"
@@ -52,26 +59,26 @@ const HowItWorks = () => {
   const features = [
     {
       icon: Users,
-      title: "Trusted by Thousands",
-      description: "Over 89+ active users rely on our platform for legal assistance",
+      title: getTranslation('trustedBy', currentLanguage),
+      description: '',
       color: "text-blue-500"
     },
     {
       icon: Shield,
-      title: "Secure & Private",
-      description: "Your data is protected with enterprise-grade security measures",
+      title: getTranslation('privacySecurity', currentLanguage),
+      description: '',
       color: "text-green-500"
     },
     {
       icon: Clock,
-      title: "24/7 Available",
-      description: "Get legal help anytime, anywhere with our always-on AI assistant",
+      title: '24/7',
+      description: '',
       color: "text-purple-500"
     },
     {
       icon: Award,
-      title: "Citation-Backed",
-      description: "All answers include relevant legal citations and precedents",
+      title: getTranslation('keyCitations', currentLanguage),
+      description: '',
       color: "text-orange-500"
     }
   ];
@@ -81,11 +88,10 @@ const HowItWorks = () => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-16 animate-fade-up">
           <h2 className="text-4xl md:text-5xl font-heading font-bold text-primary mb-4">
-            How It Works
+            {getTranslation('howItWorks', currentLanguage)}
           </h2>
           <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-            Our AI-powered legal assistant simplifies complex legal processes into 
-            four simple steps. Get reliable, citation-backed answers in minutes.
+            {getTranslation('howItWorksDescription', currentLanguage)}
           </p>
         </div>
 
@@ -145,90 +151,7 @@ const HowItWorks = () => {
           ))}
         </div>
 
-        {/* Technology Stack */}
-        <Card className="p-8 gradient-card border-border/50 max-w-6xl mx-auto">
-          <div className="text-center mb-8">
-            <h3 className="text-2xl font-heading font-semibold text-primary mb-4">
-              Built with Advanced Technology
-            </h3>
-            <p className="text-muted-foreground">
-              Our platform leverages cutting-edge AI and legal technology to deliver accurate, reliable results.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {/* Frontend */}
-            <div className="space-y-4">
-              <h4 className="text-lg font-semibold text-primary text-center">Frontend (UI)</h4>
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2 text-sm">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>React & TypeScript</span>
-                </div>
-                <div className="flex items-center space-x-2 text-sm">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Tailwind CSS</span>
-                </div>
-                <div className="flex items-center space-x-2 text-sm">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Responsive Design</span>
-                </div>
-                <div className="flex items-center space-x-2 text-sm">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Cross-Platform</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Backend */}
-            <div className="space-y-4">
-              <h4 className="text-lg font-semibold text-primary text-center">Backend (API)</h4>
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2 text-sm">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Node.js & Express</span>
-                </div>
-                <div className="flex items-center space-x-2 text-sm">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>OpenAI GPT-4</span>
-                </div>
-                <div className="flex items-center space-x-2 text-sm">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Pinecone Vector DB</span>
-                </div>
-                <div className="flex items-center space-x-2 text-sm">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>RAG System</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Database */}
-            <div className="space-y-4">
-              <h4 className="text-lg font-semibold text-primary text-center">Data Layer</h4>
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2 text-sm">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>PostgreSQL</span>
-                </div>
-                <div className="flex items-center space-x-2 text-sm">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Manifest ORM</span>
-                </div>
-                <div className="flex items-center space-x-2 text-sm">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Secure Storage</span>
-                </div>
-                <div className="flex items-center space-x-2 text-sm">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Audit Logging</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </Card>
-
-        {/* CTA */}
+        {/* Technology Stack section removed */}
         <div className="text-center mt-16">
           <Button
             size="lg"
@@ -241,7 +164,7 @@ const HowItWorks = () => {
             className="glow-primary flex items-center space-x-2 mx-auto"
           >
             <MessageSquare className="h-5 w-5" />
-            <span>Try It Now</span>
+            <span>{getTranslation('startChat', currentLanguage)}</span>
             <ArrowRight className="h-5 w-5" />
           </Button>
         </div>

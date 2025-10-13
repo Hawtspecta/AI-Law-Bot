@@ -162,13 +162,13 @@ const Header = ({ onLanguageChange, currentLanguage = 'en' }: HeaderProps) => {
               <Newspaper className="h-4 w-4 mr-1 inline" />
               {getTranslation('news', currentLanguage)}
             </button>
-            <button
-              onClick={() => scrollToSection('about')}
-              className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
-            >
-              <Info className="h-4 w-4 mr-1 inline" />
-              {getTranslation('about', currentLanguage)}
-            </button>
+              <button
+                onClick={() => scrollToSection('privacy')}
+                className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+              >
+                <Info className="h-4 w-4 mr-1 inline" />
+                {getTranslation('privacy', currentLanguage)}
+              </button>
           </nav>
 
           {/* Right side controls */}
@@ -269,11 +269,11 @@ const Header = ({ onLanguageChange, currentLanguage = 'en' }: HeaderProps) => {
                 {getTranslation('news', currentLanguage)}
               </button>
               <button
-                onClick={() => scrollToSection('about')}
+                onClick={() => scrollToSection('privacy')}
                 className="text-left px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-primary hover:bg-accent transition-colors"
               >
                 <Info className="h-4 w-4 mr-2 inline" />
-                {getTranslation('about', currentLanguage)}
+                {getTranslation('privacy', currentLanguage)}
               </button>
             </nav>
           </div>

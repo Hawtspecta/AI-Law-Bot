@@ -18,7 +18,7 @@ const ChatInterface = ({ currentLanguage = 'en' }: ChatInterfaceProps) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: "Hello! I'm your AI legal assistant. Ask me anything about laws, legal procedures, or upload a document for analysis.",
+      content: getTranslation('chatGreeting', currentLanguage),
     },
   ]);
   const [input, setInput] = useState("");
@@ -28,10 +28,10 @@ const ChatInterface = ({ currentLanguage = 'en' }: ChatInterfaceProps) => {
   const [sessionId] = useState(() => localStorage.getItem('currentSessionId') || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
 
   const examplePrompts = [
-    "What is the procedure for consumer complaints?",
-    "Check compliance for this rental agreement.",
-    "Summarize this legal case.",
-    "How do I file an RTI application?",
+    getTranslation('examplePrompt1', currentLanguage),
+    getTranslation('examplePrompt2', currentLanguage),
+    getTranslation('examplePrompt3', currentLanguage),
+    getTranslation('examplePrompt4', currentLanguage),
   ];
 
   const handleSend = async () => {
@@ -48,16 +48,16 @@ const ChatInterface = ({ currentLanguage = 'en' }: ChatInterfaceProps) => {
         message: currentInput,
         sessionId,
         userId: "anonymous",
-        language: "en",
+        language: currentLanguage,
       });
 
       setMessages(prev => [...prev, assistantMessage]);
     } catch (error: any) {
       console.error("Chat error:", error);
-      toast.error("Failed to send message. Please try again.");
+      toast.error(getTranslation('chatSendError', currentLanguage));
       setMessages(prev => [
         ...prev,
-        { role: "assistant", content: "I'm sorry, I encountered an error. Please try again." },
+        { role: "assistant", content: getTranslation('chatAssistantError', currentLanguage) },
       ]);
     } finally {
       setIsLoading(false);

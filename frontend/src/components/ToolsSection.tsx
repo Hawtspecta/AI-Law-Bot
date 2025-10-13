@@ -64,58 +64,54 @@ const ToolsSection = ({ currentLanguage = 'en' }: ToolsSectionProps) => {
   const tools = [
     {
       id: 'legal-research',
-      title: 'Legal Research Tool',
-      description: 'Access dedicated search interface. Performs high-speed vector search using Pinecone to retrieve statutes and case precedents, which the LLM then summarizes.',
+      title: getTranslation('legalResearchTool', currentLanguage),
       icon: Search,
       color: 'text-blue-500',
       bgColor: 'bg-blue-500/10',
       features: [
-        'Vector-based legal search',
-        'Statute and precedent retrieval',
-        'AI-powered summarization',
-        'Citation-backed results'
+        getTranslation('vectorBasedSearch', currentLanguage),
+        getTranslation('statuteRetrieval', currentLanguage),
+        getTranslation('aiSummarization', currentLanguage),
+        getTranslation('citationBackedResults', currentLanguage)
       ]
     },
     {
       id: 'contract-analyzer',
-      title: 'Contract Analyzer',
-      description: 'Uses NLP/ML to extract clauses, perform risk assessment, and conduct Compliance Checks against current regulations, flagging risks as Critical/High/Medium.',
+      title: getTranslation('contractAnalyzer', currentLanguage),
       icon: FileText,
       color: 'text-green-500',
       bgColor: 'bg-green-500/10',
       features: [
-        'Clause extraction',
-        'Risk assessment',
-        'Compliance checking',
-        'Risk level flagging'
+        getTranslation('clauseExtraction', currentLanguage),
+        getTranslation('riskAssessment', currentLanguage),
+        getTranslation('complianceChecking', currentLanguage),
+        getTranslation('riskLevelFlagging', currentLanguage)
       ]
     },
     {
       id: 'form-assistance',
-      title: 'Legal News & Forms',
-      description: 'Form Assistance utilizes logic-based conditions to validate user inputs against form requirements stored in PostgreSQL, minimizing errors in document preparation.',
+      title: getTranslation('legalNewsForms', currentLanguage),
       icon: ClipboardList,
       color: 'text-purple-500',
       bgColor: 'bg-purple-500/10',
       features: [
-        'Logic-based validation',
-        'Form requirement checking',
-        'Error minimization',
-        'Document preparation'
+        getTranslation('logicValidation', currentLanguage),
+        getTranslation('formRequirementChecking', currentLanguage),
+        getTranslation('errorMinimization', currentLanguage),
+        getTranslation('documentPreparation', currentLanguage)
       ]
     },
     {
       id: 'document-comparator',
-      title: 'Document Comparator',
-      description: 'Compares documents using Natural Language Inference (NLI) to identify clauses invalidated by new laws. Generates a visual redline view.',
+      title: getTranslation('documentComparator', currentLanguage),
       icon: GitCompare,
       color: 'text-orange-500',
       bgColor: 'bg-orange-500/10',
       features: [
-        'Natural Language Inference',
-        'Clause invalidation detection',
-        'Visual redline view',
-        'Law compliance checking'
+        getTranslation('nli', currentLanguage),
+        getTranslation('clauseInvalidation', currentLanguage),
+        getTranslation('visualRedline', currentLanguage),
+        getTranslation('lawComplianceChecking', currentLanguage)
       ]
     }
   ];
@@ -196,34 +192,34 @@ const ToolsSection = ({ currentLanguage = 'en' }: ToolsSectionProps) => {
               <Info className="h-8 w-8 text-blue-500" />
             </div>
             <h3 className="text-2xl font-heading font-semibold text-primary mb-4">
-              How Our Tools Work
+              {/* howOurToolsWork section removed */}
             </h3>
             <div className="grid md:grid-cols-3 gap-6 text-left">
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
                   <div className="w-6 h-6 rounded-full bg-primary text-white text-xs flex items-center justify-center font-bold">1</div>
-                  <h4 className="font-semibold text-primary">Upload & Process</h4>
+                  <h4 className="font-semibold text-primary">{getTranslation('uploadProcess', currentLanguage)}</h4>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Upload your documents or enter your query. Our AI processes the information using advanced NLP techniques.
+                  {getTranslation('uploadProcessDesc', currentLanguage)}
                 </p>
               </div>
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
                   <div className="w-6 h-6 rounded-full bg-primary text-white text-xs flex items-center justify-center font-bold">2</div>
-                  <h4 className="font-semibold text-primary">AI Analysis</h4>
+                  <h4 className="font-semibold text-primary">{getTranslation('aiAnalysis', currentLanguage)}</h4>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Our AI analyzes the content, extracts key information, and performs compliance checks against current regulations.
+                  {getTranslation('aiAnalysisDesc', currentLanguage)}
                 </p>
               </div>
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
                   <div className="w-6 h-6 rounded-full bg-primary text-white text-xs flex items-center justify-center font-bold">3</div>
-                  <h4 className="font-semibold text-primary">Get Results</h4>
+                  <h4 className="font-semibold text-primary">{getTranslation('getResults', currentLanguage)}</h4>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Receive detailed analysis, recommendations, and citation-backed results to help you make informed decisions.
+                  {getTranslation('getResultsDesc', currentLanguage)}
                 </p>
               </div>
             </div>
