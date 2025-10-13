@@ -282,9 +282,9 @@ const Header = ({ onLanguageChange, currentLanguage = 'en' }: HeaderProps) => {
 
       {/* Login Modal */}
       {isLoginOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="absolute inset-0" onClick={() => setIsLoginOpen(false)}></div>
-          <Card className="w-full max-w-md p-6 relative z-10 mx-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center min-h-screen bg-black/50 overflow-y-auto p-4">
+          <div className="absolute inset-0 z-0" onClick={() => setIsLoginOpen(false)}></div>
+          <Card className="w-full max-w-md max-h-[90vh] overflow-y-auto p-6 relative z-10 mx-auto">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold">{getTranslation('login', currentLanguage)}</h2>
               <Button variant="ghost" size="sm" onClick={() => setIsLoginOpen(false)}>
@@ -296,13 +296,13 @@ const Header = ({ onLanguageChange, currentLanguage = 'en' }: HeaderProps) => {
                 type="email"
                 placeholder="Email"
                 value={loginForm.email}
-                onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLoginForm({ ...loginForm, email: e.target.value })}
               />
               <Input
                 type="password"
                 placeholder="Password"
                 value={loginForm.password}
-                onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLoginForm({ ...loginForm, password: e.target.value })}
               />
               <Button onClick={handleLogin} disabled={isLoading} className="w-full">
                 {isLoading ? 'Logging in...' : getTranslation('login', currentLanguage)}
@@ -314,9 +314,9 @@ const Header = ({ onLanguageChange, currentLanguage = 'en' }: HeaderProps) => {
 
       {/* Signup Modal */}
       {isSignupOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="absolute inset-0" onClick={() => setIsSignupOpen(false)}></div>
-          <Card className="w-full max-w-md p-6 relative z-10 mx-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center min-h-screen bg-black/50 overflow-y-auto p-4">
+          <div className="absolute inset-0 z-0" onClick={() => setIsSignupOpen(false)}></div>
+          <Card className="w-full max-w-md max-h-[90vh] overflow-y-auto p-6 relative z-10 mx-auto">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold">{getTranslation('signUp', currentLanguage)}</h2>
               <Button variant="ghost" size="sm" onClick={() => setIsSignupOpen(false)}>
@@ -328,19 +328,19 @@ const Header = ({ onLanguageChange, currentLanguage = 'en' }: HeaderProps) => {
                 type="text"
                 placeholder="Full Name"
                 value={signupForm.name}
-                onChange={(e) => setSignupForm({ ...signupForm, name: e.target.value })}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSignupForm({ ...signupForm, name: e.target.value })}
               />
               <Input
                 type="email"
                 placeholder="Email"
                 value={signupForm.email}
-                onChange={(e) => setSignupForm({ ...signupForm, email: e.target.value })}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSignupForm({ ...signupForm, email: e.target.value })}
               />
               <Input
                 type="password"
                 placeholder="Password"
                 value={signupForm.password}
-                onChange={(e) => setSignupForm({ ...signupForm, password: e.target.value })}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSignupForm({ ...signupForm, password: e.target.value })}
               />
               <Button onClick={handleSignup} disabled={isLoading} className="w-full">
                 {isLoading ? 'Creating Account...' : getTranslation('signUp', currentLanguage)}
