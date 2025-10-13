@@ -16,8 +16,9 @@ import {
 import { apiClient } from "@/services/api";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { getTranslation } from "@/lib/translations";
 
-const LegalResearch = () => {
+const LegalResearch = ({ currentLanguage = 'en' }) => {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -26,7 +27,7 @@ const LegalResearch = () => {
 
   const handleSearch = async () => {
     if (!query.trim()) {
-      toast.error("Please enter a search query");
+      toast.error(getTranslation('enterSearchQuery', currentLanguage));
       return;
     }
 
@@ -40,10 +41,10 @@ const LegalResearch = () => {
 
       setResults(response);
       setSearchHistory(prev => [query.trim(), ...prev.slice(0, 4)]);
-      toast.success("Legal research completed!");
+  toast.success(getTranslation('legalResearchCompleted', currentLanguage));
     } catch (error) {
       console.error("Legal research error:", error);
-      toast.error("Failed to perform legal research");
+  toast.error(getTranslation('legalResearchFailed', currentLanguage));
     } finally {
       setIsLoading(false);
     }
@@ -67,11 +68,11 @@ const LegalResearch = () => {
                 className="flex items-center space-x-2"
               >
                 <ArrowLeft className="h-4 w-4" />
-                <span>Back to Home</span>
+                <span>{getTranslation('backToHome', currentLanguage)}</span>
               </Button>
               <div className="flex items-center space-x-2">
                 <Search className="h-6 w-6 text-primary" />
-                <h1 className="text-xl font-bold text-primary">Legal Research Tool</h1>
+                <h1 className="text-xl font-bold text-primary">{getTranslation('legalResearchTool', currentLanguage)}</h1>
               </div>
             </div>
           </div>
@@ -84,9 +85,9 @@ const LegalResearch = () => {
           <Card className="p-6 mb-8">
             <div className="space-y-4">
               <div>
-                <h2 className="text-2xl font-semibold mb-2">Vector-Based Legal Search</h2>
+                <h2 className="text-2xl font-semibold mb-2">{getTranslation('vectorBasedSearch', currentLanguage)}</h2>
                 <p className="text-muted-foreground">
-                  Search through statutes, case precedents, and legal documents using advanced AI-powered vector search.
+                  {getTranslation('vectorBasedSearchDesc', currentLanguage)}
                 </p>
               </div>
 
@@ -94,7 +95,7 @@ const LegalResearch = () => {
                 <Input
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Enter your legal research query..."
+                  placeholder={getTranslation('enterResearchQuery', currentLanguage)}
                   className="flex-1"
                   onKeyPress={(e) => e.key === "Enter" && !isLoading && handleSearch()}
                 />
@@ -102,12 +103,12 @@ const LegalResearch = () => {
                   {isLoading ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Searching...
+                      {getTranslation('searching', currentLanguage)}
                     </>
                   ) : (
                     <>
                       <Search className="h-4 w-4 mr-2" />
-                      Search
+                      {getTranslation('search', currentLanguage)}
                     </>
                   )}
                 </Button>
@@ -116,7 +117,7 @@ const LegalResearch = () => {
               {/* Search History */}
               {searchHistory.length > 0 && (
                 <div className="space-y-2">
-                  <h3 className="text-sm font-medium text-muted-foreground">Recent Searches:</h3>
+                  <h3 className="text-sm font-medium text-muted-foreground">{getTranslation('recentSearches', currentLanguage)}</h3>
                   <div className="flex flex-wrap gap-2">
                     {searchHistory.map((historyQuery, index) => (
                       <Button
@@ -139,7 +140,7 @@ const LegalResearch = () => {
           {isLoading && (
             <Card className="p-8 text-center">
               <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
-              <p className="text-muted-foreground">Performing vector search and AI analysis...</p>
+              <p className="text-muted-foreground">{getTranslation('performingVectorSearch', currentLanguage)}</p>
             </Card>
           )}
 
@@ -149,7 +150,7 @@ const LegalResearch = () => {
               <Card className="p-6">
                 <div className="flex items-center space-x-2 mb-4">
                   <BookOpen className="h-5 w-5 text-primary" />
-                  <h3 className="text-lg font-semibold">Search Results</h3>
+                  <h3 className="text-lg font-semibold">{getTranslation('searchResults', currentLanguage)}</h3>
                 </div>
                 <div className="prose max-w-none">
                   <div dangerouslySetInnerHTML={{ __html: results.results.content.replace(/\n/g, '<br/>') }} />
@@ -161,7 +162,7 @@ const LegalResearch = () => {
                 <Card className="p-6">
                   <div className="flex items-center space-x-2 mb-4">
                     <FileText className="h-5 w-5 text-blue-500" />
-                    <h3 className="text-lg font-semibold">Legal Citations</h3>
+                    <h3 className="text-lg font-semibold">{getTranslation('legalCitations', currentLanguage)}</h3>
                   </div>
                   <div className="space-y-2">
                     {results.results.citations.map((citation: string, index: number) => (
@@ -179,13 +180,13 @@ const LegalResearch = () => {
                 <Card className="p-6">
                   <div className="flex items-center space-x-2 mb-4">
                     <Info className="h-5 w-5 text-purple-500" />
-                    <h3 className="text-lg font-semibold">Source Documents</h3>
+                    <h3 className="text-lg font-semibold">{getTranslation('sourceDocuments', currentLanguage)}</h3>
                   </div>
                   <div className="space-y-3">
                     {results.results.sources.map((source: any, index: number) => (
                       <div key={index} className="border rounded-lg p-4">
                         <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-medium">{source.title || `Source ${index + 1}`}</h4>
+                          <h4 className="font-medium">{source.title || `${getTranslation('source', currentLanguage)} ${index + 1}`}</h4>
                           <span className="text-xs text-muted-foreground">
                             Similarity: {(source.similarity * 100).toFixed(1)}%
                           </span>
@@ -203,8 +204,8 @@ const LegalResearch = () => {
               {/* Search Metadata */}
               <Card className="p-4">
                 <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <span>Query: "{results.query}"</span>
-                  <span>Search completed at {new Date(results.timestamp).toLocaleTimeString()}</span>
+                  <span>{getTranslation('query', currentLanguage)}: "{results.query}"</span>
+                  <span>{getTranslation('searchCompletedAt', currentLanguage)} {new Date(results.timestamp).toLocaleTimeString()}</span>
                 </div>
               </Card>
             </div>
@@ -214,34 +215,34 @@ const LegalResearch = () => {
           <Card className="p-6 mt-8">
             <div className="flex items-center space-x-2 mb-4">
               <Info className="h-5 w-5 text-blue-500" />
-              <h3 className="text-lg font-semibold">How Legal Research Works</h3>
+              <h3 className="text-lg font-semibold">{getTranslation('howLegalResearchWorks', currentLanguage)}</h3>
             </div>
             <div className="grid md:grid-cols-3 gap-4 text-sm">
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
                   <div className="w-6 h-6 rounded-full bg-primary text-white text-xs flex items-center justify-center font-bold">1</div>
-                  <h4 className="font-semibold">Vector Search</h4>
+                  <h4 className="font-semibold">{getTranslation('vectorSearch', currentLanguage)}</h4>
                 </div>
                 <p className="text-muted-foreground">
-                  Your query is converted to a vector and matched against our legal document database using semantic similarity.
+                  {getTranslation('vectorSearchDesc', currentLanguage)}
                 </p>
               </div>
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
                   <div className="w-6 h-6 rounded-full bg-primary text-white text-xs flex items-center justify-center font-bold">2</div>
-                  <h4 className="font-semibold">AI Analysis</h4>
+                  <h4 className="font-semibold">{getTranslation('aiAnalysis', currentLanguage)}</h4>
                 </div>
                 <p className="text-muted-foreground">
-                  The AI analyzes the retrieved documents and provides comprehensive summaries with legal citations.
+                  {getTranslation('aiAnalysisDesc', currentLanguage)}
                 </p>
               </div>
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
                   <div className="w-6 h-6 rounded-full bg-primary text-white text-xs flex items-center justify-center font-bold">3</div>
-                  <h4 className="font-semibold">Citation-Backed Results</h4>
+                  <h4 className="font-semibold">{getTranslation('citationBackedResults', currentLanguage)}</h4>
                 </div>
                 <p className="text-muted-foreground">
-                  All results include proper legal citations and references to statutes, cases, and legal precedents.
+                  {getTranslation('citationBackedResultsDesc', currentLanguage)}
                 </p>
               </div>
             </div>
