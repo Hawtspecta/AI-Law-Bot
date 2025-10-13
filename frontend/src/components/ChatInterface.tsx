@@ -102,18 +102,62 @@ const ChatInterface = ({ currentLanguage = 'en' }: ChatInterfaceProps) => {
   const handleUploadDocument = () => {
     const inputFile = document.createElement("input");
     inputFile.type = "file";
-    inputFile.accept = ".pdf,.doc,.docx,.txt";
+    inputFile.accept = ".txt,.pdf,.doc,.docx";  // ✅ PDF support enabled
     inputFile.onchange = async (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (file) {
         try {
-          const content = await file.text();
+          // Check file size (limit to 10MB)
+          if (file.size > 10 * 1024 * 1024) {
+            toast.error("File too large. Please upload files under 10MB.");
+            return;
+          }
+          
+          // Show uploading message
+          toast.info("Uploading and analyzing document...");
+          
+          console.log(`📄 Uploading: ${file.name}, Size: ${file.size} bytes, Type: ${file.type}`);
+          
+          let content = "";
+          
+          // Handle different file types
+          if (file.type === "application/pdf" || file.name.endsWith('.pdf')) {
+            // For PDF, we'll send as base64 and let backend handle it
+            const reader = new FileReader();
+            content = await new Promise<string>((resolve, reject) => {
+              reader.onload = () => {
+                const base64 = reader.result as string;
+                // Extract just the base64 content
+                resolve(base64.split(',')[1] || base64);
+              };
+              reader.onerror = reject;
+              reader.readAsDataURL(file);
+            });
+            console.log("📄 PDF converted to base64");
+          } else {
+            // For text files, read as text
+            content = await file.text();
+            console.log(`📄 Text content extracted: ${content.length} characters`);
+          }
+          
+          // Add user message showing document upload
+          const uploadMessage: Message = {
+            role: "user",
+            content: `📄 Uploaded document: ${file.name}\n\nPlease analyze this document and tell me what's in it.`
+          };
+          setMessages(prev => [...prev, uploadMessage]);
+          
+          console.log("🌐 Sending to backend API...");
+          
+          // Send to backend for analysis
           const response = await apiClient.uploadDocument({
             fileName: file.name,
             fileContent: content,
-            fileType: file.type,
+            fileType: file.type || 'application/octet-stream',
             userId: "anonymous",
           });
+          
+          console.log("✅ Backend response received:", response);
           
           // Add document to uploaded documents list
           const newDoc = {
@@ -123,10 +167,19 @@ const ChatInterface = ({ currentLanguage = 'en' }: ChatInterfaceProps) => {
           };
           setUploadedDocuments(prev => [...prev, newDoc]);
           
-          toast.success("Document uploaded and analyzed successfully!");
-          console.log("Document analysis:", response);
-        } catch (error) {
-          toast.error("Failed to upload document");
+          toast.success("Document analyzed successfully!");
+          
+          // Add AI analysis to chat messages
+          const analysisMessage: Message = {
+            role: "assistant",
+            content: response.analysis?.summary || "Document analysis completed.",
+            citations: response.analysis?.citations || []
+          };
+          setMessages(prev => [...prev, analysisMessage]);
+          
+        } catch (error: any) {
+          console.error("❌ Upload error:", error);
+          toast.error(`Failed to upload: ${error.message}`);
         }
       }
     };
@@ -217,8 +270,10 @@ const ChatInterface = ({ currentLanguage = 'en' }: ChatInterfaceProps) => {
                           message.role === "user" ? "bg-accent text-white" : "bg-card border border-border"
                         }`}
                       >
-                        <p className="text-sm">{message.content}</p>
-                        {message.citations && (
+                        {/* ✅ FIXED: Use whitespace-pre-wrap to preserve line breaks */}
+                        <div className="text-sm whitespace-pre-wrap">{message.content}</div>
+                        
+                        {message.citations && message.citations.length > 0 && (
                           <div className="mt-3 pt-3 border-t border-border/30">
                             <p className="text-xs font-medium mb-2 text-muted-foreground">Key Citations:</p>
                             {message.citations.map((citation, i) => (

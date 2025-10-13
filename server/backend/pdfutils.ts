@@ -1,0 +1,23 @@
+// server/backend/pdfUtils.ts
+
+export async function extractPdfText(base64Content: string): Promise<string> {
+    try {
+      // Dynamic import for pdf-parse
+      const pdfParse = require('pdf-parse');
+      
+      // Convert base64 to buffer
+      const pdfBuffer = Buffer.from(base64Content, 'base64');
+      
+      console.log(`📄 PDF Buffer created: ${pdfBuffer.length} bytes`);
+      
+      // Parse PDF
+      const data = await pdfParse(pdfBuffer);
+      
+      console.log(`✅ PDF parsed: ${data.numpages} pages, ${data.text.length} characters`);
+      
+      return data.text;
+    } catch (error: any) {
+      console.error('❌ PDF parsing error:', error);
+      throw new Error(`Failed to parse PDF: ${error.message}`);
+    }
+  }

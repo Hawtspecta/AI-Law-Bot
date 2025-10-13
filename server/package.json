@@ -18,7 +18,9 @@
     "groq-sdk": "^0.33.0",
     "manifest": "^4.17.8",
     "node-fetch": "^2.6.0",
-    "openai": "^4.0.0"
+    "openai": "^4.0.0",
+    "pdf-parse": "^2.2.16",
+    "pdfjs-dist": "^5.4.296"
   },
   "devDependencies": {
     "@types/cors": "^2.8.0",
