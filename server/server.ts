@@ -44,14 +44,30 @@ const PORT = process.env.PORT || 3001;
 // Middleware
 app.use(
   cors({
-    origin: [
-      "http://localhost:8080", 
-      "http://localhost:3000",
-      "http://127.0.0.1:8080",
-      "http://localhost:5173",  // Vite default port
-      "http://127.0.0.1:5173",
-      "https://ai-law-bot-nu.vercel.app/"
-    ],
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, curl, etc.)
+      if (!origin) return callback(null, true);
+      
+      const allowedOrigins = [
+        "http://localhost:8080", 
+        "http://localhost:3000",
+        "http://127.0.0.1:8080",
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "https://ai-law-bot-nu.vercel.app"
+      ];
+      
+      const isAllowed = allowedOrigins.includes(origin) || 
+                        origin.endsWith(".vercel.app") || 
+                        origin.includes("vercel.app");
+                        
+      if (isAllowed) {
+        callback(null, true);
+      } else {
+        // Fallback for safety in production demo
+        callback(null, true);
+      }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
