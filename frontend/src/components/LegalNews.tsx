@@ -28,6 +28,9 @@ import { toast } from "sonner";
 
 import { getTranslation } from "@/lib/translations";
 
+import { useScrollReveal } from "../hooks/useScrollReveal";
+
+
 
 
 interface LegalNewsProps {
@@ -40,6 +43,8 @@ interface LegalNewsProps {
 
 const LegalNews = ({ currentLanguage = 'en' }: LegalNewsProps) => {
 
+  const revealRef = useScrollReveal();
+
   const [news, setNews] = useState<LegalNewsResponse['news']>([]);
 
   const [isLoading, setIsLoading] = useState(false);
@@ -49,6 +54,10 @@ const LegalNews = ({ currentLanguage = 'en' }: LegalNewsProps) => {
   const [selectedTopic, setSelectedTopic] = useState('general');
 
   const [limit, setLimit] = useState(6);
+
+  const [isRegionOpen, setIsRegionOpen] = useState(false);
+
+  const [isTopicOpen, setIsTopicOpen] = useState(false);
 
 
 
@@ -89,6 +98,18 @@ const LegalNews = ({ currentLanguage = 'en' }: LegalNewsProps) => {
     loadNews();
 
   }, [selectedRegion, selectedTopic, limit]);
+
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target && !target.closest(".relative")) {
+        setIsRegionOpen(false);
+        setIsTopicOpen(false);
+      }
+    };
+    window.addEventListener("click", handleOutsideClick);
+    return () => window.removeEventListener("click", handleOutsideClick);
+  }, []);
 
 
 
@@ -140,11 +161,11 @@ const LegalNews = ({ currentLanguage = 'en' }: LegalNewsProps) => {
 
   return (
 
-    <section id="news" className="py-20 bg-background">
+    <section id="news" className="py-20 bg-transparent">
 
       <div className="container mx-auto px-4">
 
-        <div className="text-center mb-16 animate-fade-up">
+        <div ref={revealRef} className="text-center mb-16 reveal-fade-up">
 
           <h2 className="text-4xl md:text-5xl font-heading font-bold text-primary mb-4">
 
@@ -164,73 +185,77 @@ const LegalNews = ({ currentLanguage = 'en' }: LegalNewsProps) => {
 
         {/* Filters */}
 
-        <div className="flex flex-wrap justify-center gap-4 mb-12">
+        <div className="flex flex-wrap justify-center gap-6 mb-12 relative z-40">
 
-          <div className="flex items-center space-x-2">
-
-            <Globe className="h-4 w-4 text-muted-foreground" />
-
-            <select
-
-              value={selectedRegion}
-
-              onChange={(e) => {
-                setSelectedRegion(e.target.value);
-                setLimit(6);
+          {/* Region Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => {
+                setIsRegionOpen(!isRegionOpen);
+                setIsTopicOpen(false);
               }}
-
-              className="px-3 py-2 rounded-md border border-border bg-background text-sm"
-
+              className="flex items-center space-x-2 px-3 py-2 rounded-md border border-border bg-background text-sm cursor-pointer hover:bg-secondary/50 transition-smooth"
             >
-
-              {regions.map((region) => (
-
-                <option key={region.code} value={region.code}>
-
-                  {region.flag} {region.name}
-
-                </option>
-
-              ))}
-
-            </select>
-
+              <Globe className="h-4 w-4 text-muted-foreground" />
+              <span>{regions.find(r => r.code === selectedRegion)?.flag} {regions.find(r => r.code === selectedRegion)?.name}</span>
+            </button>
+            
+            {isRegionOpen && (
+              <div className="absolute left-0 mt-2 w-48 rounded-xl border border-border/60 bg-card p-1 shadow-lg z-50 animate-scale-in">
+                {regions.map((region) => (
+                  <button
+                    key={region.code}
+                    onClick={() => {
+                      setSelectedRegion(region.code);
+                      setLimit(6);
+                      setIsRegionOpen(false);
+                    }}
+                    className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-smooth hover:bg-secondary cursor-pointer flex items-center justify-between ${
+                      selectedRegion === region.code ? "bg-secondary font-semibold" : ""
+                    }`}
+                  >
+                    <span>{region.flag} {region.name}</span>
+                    {selectedRegion === region.code && <span className="h-1.5 w-1.5 rounded-full bg-accent" />}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
-
-
-          <div className="flex items-center space-x-2">
-
-            <Filter className="h-4 w-4 text-muted-foreground" />
-
-            <select
-
-              value={selectedTopic}
-
-              onChange={(e) => {
-                setSelectedTopic(e.target.value);
-                setLimit(6);
+          {/* Topic Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => {
+                setIsTopicOpen(!isTopicOpen);
+                setIsRegionOpen(false);
               }}
-
-              className="px-3 py-2 rounded-md border border-border bg-background text-sm"
-
+              className="flex items-center space-x-2 px-3 py-2 rounded-md border border-border bg-background text-sm cursor-pointer hover:bg-secondary/40 transition-smooth"
             >
-
-              {topics.map((topic) => (
-
-                <option key={topic.code} value={topic.code}>
-
-                  {topic.name}
-
-                </option>
-
-              ))}
-
-            </select>
-
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <span>{topics.find(t => t.code === selectedTopic)?.name}</span>
+            </button>
+            
+            {isTopicOpen && (
+              <div className="absolute left-0 mt-2 w-56 rounded-xl border border-border/60 bg-card p-1 shadow-lg z-50 animate-scale-in">
+                {topics.map((topic) => (
+                  <button
+                    key={topic.code}
+                    onClick={() => {
+                      setSelectedTopic(topic.code);
+                      setLimit(6);
+                      setIsTopicOpen(false);
+                    }}
+                    className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-smooth hover:bg-secondary cursor-pointer flex items-center justify-between ${
+                      selectedTopic === topic.code ? "bg-secondary font-semibold" : ""
+                    }`}
+                  >
+                    <span>{topic.name}</span>
+                    {selectedTopic === topic.code && <span className="h-1.5 w-1.5 rounded-full bg-accent" />}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
-
-
 
           <Button
 
@@ -241,6 +266,7 @@ const LegalNews = ({ currentLanguage = 'en' }: LegalNewsProps) => {
             variant="outline"
 
             size="sm"
+            className="cursor-pointer"
 
           >
 
@@ -288,11 +314,13 @@ const LegalNews = ({ currentLanguage = 'en' }: LegalNewsProps) => {
 
                 key={article.id}
 
-                className="p-6 gradient-card border-border/50 hover:border-accent/50 transition-all duration-300 hover:shadow-lg group"
+                className="p-6 gradient-card border-border/40 hover:border-accent/40 shadow-sm hover:shadow-md hover:-translate-y-1 transition-smooth rounded-2xl group relative overflow-hidden flex flex-col h-full"
 
               >
 
-                <div className="space-y-4">
+                <div className="flex flex-col h-full justify-between flex-1">
+
+                  <div className="space-y-4">
 
                   {/* Article Header */}
 
@@ -338,11 +366,13 @@ const LegalNews = ({ currentLanguage = 'en' }: LegalNewsProps) => {
 
                   </p>
 
+                </div>
+
 
 
                   {/* Article Actions */}
 
-                  <div className="flex items-center justify-between pt-4 border-t border-border/30">
+                  <div className="flex items-center justify-between pt-4 border-t border-border/30 mt-4">
 
                     <Button
 

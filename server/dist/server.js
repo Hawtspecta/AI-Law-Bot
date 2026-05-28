@@ -57,6 +57,7 @@ console.log('GROQ_API_KEY:', process.env.GROQ_API_KEY ? 'Present' : 'Missing');
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const aiServices_1 = require("./backend/aiServices");
+const ragServices_1 = require("./backend/ragServices");
 // Dynamic load of pdf-parse (optional)
 let pdfParse = undefined;
 try {
@@ -139,20 +140,8 @@ app.get("/health", (req, res) => {
 app.post("/api/chat", async (req, res) => {
     try {
         const { message, language, userId, sessionId } = req.body;
-        // Enhanced prompt for better formatting
-        const enhancedMessage = `Please provide a well-structured response to this query.
-
-FORMAT YOUR RESPONSE AS FOLLOWS:
-- Start with a brief introduction
-- Use numbered steps (1., 2., 3.) for procedures or sequential information
-- Use bullet points (•) for lists
-- Add blank lines between sections for readability
-- Keep paragraphs short (2-3 sentences maximum)
-- Use section headings in CAPS followed by a colon
-- Add visual separators (--- or ====) between major sections
-
-Query: ${message}`;
-        const response = await (0, aiServices_1.generateAIResponse)(enhancedMessage, language || "en");
+        console.log(`🤖 Processing RAG chat query: "${message}"`);
+        const ragResponse = await (0, ragServices_1.ragPipeline)(message, language || "en");
         res.json({
             userMessage: {
                 role: 'user',
@@ -161,9 +150,9 @@ Query: ${message}`;
             },
             assistantMessage: {
                 role: 'assistant',
-                content: response.content,
-                citations: response.citations.length > 0 ? response.citations : ['AI Generated with Groq Llama 3.3'],
-                sources: [],
+                content: ragResponse.content,
+                citations: ragResponse.citations,
+                sources: ragResponse.sources,
                 timestamp: new Date().toISOString()
             }
         });
@@ -278,39 +267,15 @@ IMPORTANT: Base your entire response on the ACTUAL content above. Do not give ge
 app.post("/api/search", async (req, res) => {
     try {
         const { query, filters, userId } = req.body;
-        const response = await (0, aiServices_1.generateAIResponse)(`Provide comprehensive legal information on: "${query}"
-
-FORMAT REQUIREMENTS:
-Use this exact structure with clear sections:
-
-OVERVIEW:
-[Brief introduction - 2-3 sentences]
-
-RELEVANT LAWS & PROVISIONS:
-• [List applicable laws with bullet points]
-• [Include specific sections/articles]
-• [Keep each point concise]
-
-KEY LEGAL PRINCIPLES:
-[Explain fundamental concepts in short paragraphs]
-[Add blank lines between paragraphs]
-
-RECENT DEVELOPMENTS:
-[Mention recent cases or amendments if applicable]
-
-PRACTICAL GUIDANCE:
-1. [Use numbered steps]
-2. [For actionable advice]
-3. [Keep steps clear and brief]
-
-Include proper legal references where applicable.`, "en");
+        console.log(`🔍 Legal search with RAG: "${query}"`);
+        const searchResults = await (0, ragServices_1.ragPipeline)(query, 'en', { searchMode: true });
         res.json({
             query,
             results: {
-                content: response.content,
-                citations: response.citations.length > 0 ? response.citations : ['AI Legal Research'],
-                sources: [],
-                searchResults: []
+                content: searchResults.content,
+                citations: searchResults.citations,
+                sources: searchResults.sources,
+                searchResults: searchResults.sources
             },
             filters: filters || {},
             timestamp: new Date().toISOString()
@@ -476,29 +441,396 @@ app.get("/api/news", async (req, res) => {
         const region = req.query.region || 'India';
         const topic = req.query.topic || 'general';
         const limit = parseInt(req.query.limit) || 6;
+        // Rich fallback database for local offline mode & backfilling
+        const currentDate = new Date();
+        const localDatabase = {
+            'India': {
+                'general': [
+                    {
+                        id: 101,
+                        title: 'Supreme Court Upholds Right to Privacy in the Digital Era',
+                        summary: 'The Supreme Court of India reinforced the fundamental right to privacy, establishing a new legal benchmark for digital data protection and online citizen rights.',
+                        date: new Date(currentDate.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+                        source: 'Live Law India',
+                        url: 'https://www.livelaw.in'
+                    },
+                    {
+                        id: 102,
+                        title: 'Bar Council Proposes New Professional Ethics Guidelines',
+                        summary: 'The Bar Council of India has drafted a modern code of conduct to address digital marketing, virtual consultations, and technology integration in legal practices.',
+                        date: new Date(currentDate.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+                        source: 'Bar and Bench',
+                        url: 'https://www.barandbench.com'
+                    }
+                ],
+                'consumer': [
+                    {
+                        id: 111,
+                        title: 'Consumer Commission Penalizes E-Commerce Giant for Delayed Refund',
+                        summary: 'The National Consumer Disputes Redressal Commission (NCDRC) issued a landmark ruling penalizing a major online marketplace for violating consumer rights.',
+                        date: new Date(currentDate.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+                        source: 'Consumer Voice',
+                        url: 'https://www.livelaw.in'
+                    },
+                    {
+                        id: 112,
+                        title: 'New CCPA Guidelines Target Misleading Health Advertisements',
+                        summary: 'The Central Consumer Protection Authority (CCPA) issued a strict warning and guidelines prohibiting false health and wellness claims in media.',
+                        date: new Date(currentDate.getTime() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+                        source: 'Economic Times',
+                        url: 'https://economictimes.indiatimes.com'
+                    }
+                ],
+                'corporate': [
+                    {
+                        id: 121,
+                        title: 'NCLT Rules on Corporate Insolvency Resolution Timelines',
+                        summary: 'The National Company Law Tribunal issued fresh directives aimed at speeding up the resolution processes under the Insolvency and Bankruptcy Code (IBC).',
+                        date: new Date(currentDate.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+                        source: 'Business Standard',
+                        url: 'https://www.business-standard.com'
+                    },
+                    {
+                        id: 122,
+                        title: 'SEBI Enhances ESG Disclosure Rules for Top Listed Companies',
+                        summary: 'The Securities and Exchange Board of India (SEBI) has mandated comprehensive ESG metrics reporting for India\'s top 1,000 listed corporations.',
+                        date: new Date(currentDate.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+                        source: 'Economic Times',
+                        url: 'https://economictimes.indiatimes.com'
+                    }
+                ],
+                'criminal': [
+                    {
+                        id: 131,
+                        title: 'New Criminal Codes BNS, BNSS, and BSA Fully Operational',
+                        summary: 'The Bharatiya Nyaya Sanhita, Bharatiya Nagarik Suraksha Sanhita, and Bharatiya Sakshya Adhiniyam have officially replaced old colonial laws, streamlining modern forensic evidence standards.',
+                        date: new Date(currentDate.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+                        source: 'Ministry of Home Affairs',
+                        url: 'https://www.livelaw.in'
+                    },
+                    {
+                        id: 132,
+                        title: 'Supreme Court Sets Strict Standards for Arrest and Custodial Questioning',
+                        summary: 'In an essential criminal justice ruling, the Supreme Court refined custody guidelines to ensure strict adherence to human rights during questioning.',
+                        date: new Date(currentDate.getTime() - 6 * 24 * 60 * 60 * 1000).toISOString(),
+                        source: 'Live Law India',
+                        url: 'https://www.livelaw.in'
+                    }
+                ],
+                'family': [
+                    {
+                        id: 141,
+                        title: 'High Court Rules Mutual Consent Divorce Period Can Be Waived',
+                        summary: 'The High Court ruled that the statutory six-month waiting period for mutual consent divorce can be waived under specific exceptional circumstances.',
+                        date: new Date(currentDate.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+                        source: 'Indian Express',
+                        url: 'https://indianexpress.com'
+                    },
+                    {
+                        id: 142,
+                        title: 'Supreme Court Clarifies Child Custody Principles and Joint Guardianship',
+                        summary: 'The apex court emphasized that child welfare is the primary benchmark in custody disputes, advocating for joint parenting models where feasible.',
+                        date: new Date(currentDate.getTime() - 8 * 24 * 60 * 60 * 1000).toISOString(),
+                        source: 'Bar and Bench',
+                        url: 'https://www.barandbench.com'
+                    }
+                ],
+                'property': [
+                    {
+                        id: 151,
+                        title: 'RERA Rules Builder Must Pay Penalty for Delayed Construction',
+                        summary: 'The Real Estate Regulatory Authority (RERA) ruled that developers must provide compensation to home buyers for projects delayed beyond standard timelines.',
+                        date: new Date(currentDate.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+                        source: 'Property Law Journal',
+                        url: 'https://economictimes.indiatimes.com'
+                    },
+                    {
+                        id: 152,
+                        title: 'Land Acquisition Compensations Must Match Current Market Value',
+                        summary: 'A new judicial amendment establishes that government land acquisition for public infrastructure must be compensated at active market value.',
+                        date: new Date(currentDate.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+                        source: 'Live Law India',
+                        url: 'https://www.livelaw.in'
+                    }
+                ]
+            },
+            'USA': {
+                'general': [
+                    {
+                        id: 201,
+                        title: 'Supreme Court Rules on AI Output and Patent Ownership',
+                        summary: 'The US Supreme Court established a landmark ruling on AI-created patent applications, specifying that inventors must be human under current federal patent laws.',
+                        date: new Date(currentDate.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+                        source: 'SCOTUS Blog',
+                        url: 'https://www.supremecourt.gov'
+                    },
+                    {
+                        id: 202,
+                        title: 'Federal Judiciary Launches New Digital E-Filing System',
+                        summary: 'The federal court system introduced an upgraded, highly secure electronic document database to replace obsolete filing legacy portals.',
+                        date: new Date(currentDate.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+                        source: 'US Courts Info',
+                        url: 'https://www.uscourts.gov'
+                    }
+                ],
+                'consumer': [
+                    {
+                        id: 211,
+                        title: 'FTC Announces Massive Credit Privacy Settlement',
+                        summary: 'The Federal Trade Commission reached a settlement with a major financial bureau over inadequate consumer credit report security.',
+                        date: new Date(currentDate.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+                        source: 'FTC Press Room',
+                        url: 'https://www.ftc.gov'
+                    },
+                    {
+                        id: 212,
+                        title: 'Consumer Protection Bureau Proposes Elimination of Medical Debt Fees',
+                        summary: 'The CFPB drafted new rules aimed at deleting medical debt records from standard consumer credit reports to protect ratings.',
+                        date: new Date(currentDate.getTime() - 6 * 24 * 60 * 60 * 1000).toISOString(),
+                        source: 'CFPB Blog',
+                        url: 'https://www.consumerfinance.gov'
+                    }
+                ],
+                'corporate': [
+                    {
+                        id: 221,
+                        title: 'SEC Mandates Standardized Corporate Climate Risk Reporting',
+                        summary: 'The Securities and Exchange Commission (SEC) finalized regulations requiring registered companies to disclose environmental impact metrics.',
+                        date: new Date(currentDate.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+                        source: 'SEC News',
+                        url: 'https://www.sec.gov'
+                    },
+                    {
+                        id: 222,
+                        title: 'Delaware Court Resolves Major Shareholder Acquisition Dispute',
+                        summary: 'A crucial ruling in the Delaware Court of Chancery redefined board responsibilities during hostile private equity acquisition attempts.',
+                        date: new Date(currentDate.getTime() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+                        source: 'Delaware Law Weekly',
+                        url: 'https://courts.delaware.gov'
+                    }
+                ],
+                'criminal': [
+                    {
+                        id: 231,
+                        title: 'Justice Department Launches Campaign Against Corporate Fraud',
+                        summary: 'The DOJ announced new federal task forces and severe sentencing updates focused on financial cybercrime and systemic embezzlement.',
+                        date: new Date(currentDate.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+                        source: 'DOJ Bureau',
+                        url: 'https://www.justice.gov'
+                    },
+                    {
+                        id: 232,
+                        title: 'Supreme Court Clarifies Search Standards for Mobile Encrypted Devices',
+                        summary: 'A major fourth amendment decision establishes that law enforcement officers must obtain specific judicial warrants before looking through cloud accounts.',
+                        date: new Date(currentDate.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+                        source: 'SCOTUS Blog',
+                        url: 'https://www.supremecourt.gov'
+                    }
+                ],
+                'family': [
+                    {
+                        id: 241,
+                        title: 'State Court Establishes Multi-State Child Support Standard',
+                        summary: 'An interstate legal commission finalized uniform enforcement rules for child custody and financial support across state lines.',
+                        date: new Date(currentDate.getTime() - 9 * 24 * 60 * 60 * 1000).toISOString(),
+                        source: 'Family Law Quarterly',
+                        url: 'https://www.americanbar.org'
+                    },
+                    {
+                        id: 242,
+                        title: 'New Guidelines for Prenuptial Agreements on Digital Intellectual Property',
+                        summary: 'Legal guidelines now address how digital assets, streaming accounts, and online content revenue are divided in family law.',
+                        date: new Date(currentDate.getTime() - 12 * 24 * 60 * 60 * 1000).toISOString(),
+                        source: 'ABA Journal',
+                        url: 'https://www.abajournal.com'
+                    }
+                ],
+                'property': [
+                    {
+                        id: 251,
+                        title: 'Federal Housing Agency Redefines Landlord-Tenant Disclosure Policies',
+                        summary: 'New HUD rules require complete leasing documentation and explicit disclosure of past maintenance reports to potential tenants.',
+                        date: new Date(currentDate.getTime() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+                        source: 'HUD Office',
+                        url: 'https://www.hud.gov'
+                    },
+                    {
+                        id: 252,
+                        title: 'Supreme Court Upholds Commercial Property Zoning Protections',
+                        summary: 'A significant land-use case concluded that municipal rezoning restrictions must offer compensation to property owners.',
+                        date: new Date(currentDate.getTime() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+                        source: 'SCOTUS Blog',
+                        url: 'https://www.supremecourt.gov'
+                    }
+                ]
+            },
+            'UK': {
+                'general': [
+                    {
+                        id: 301,
+                        title: 'UK Supreme Court Refines Judicial Review Boundaries',
+                        summary: 'The UK Supreme Court clarified limits on ministerial interventions, ensuring robust legal checks on governmental policy changes.',
+                        date: new Date(currentDate.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+                        source: 'UK Law Gazette',
+                        url: 'https://www.lawgazette.co.uk'
+                    }
+                ],
+                'consumer': [
+                    {
+                        id: 311,
+                        title: 'FCA Imposes Heavy Fines on Banks Over Consumer Loan Term Clarity',
+                        summary: 'The Financial Conduct Authority penalized multiple high-street banks for failing to clarify additional fee terms for retail borrowers.',
+                        date: new Date(currentDate.getTime() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+                        source: 'FCA News',
+                        url: 'https://www.fca.org.uk'
+                    }
+                ],
+                'corporate': [
+                    {
+                        id: 321,
+                        title: 'UK Companies House Gains Enhanced Powers Against Corporate Fraud',
+                        summary: 'Under the Economic Crime and Corporate Transparency Act, Companies House can query, reject, or delete incorrect business details.',
+                        date: new Date(currentDate.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+                        source: 'UK Gov Press',
+                        url: 'https://www.gov.uk'
+                    }
+                ],
+                'criminal': [
+                    {
+                        id: 331,
+                        title: 'CPS Introduces Special Cyber Fraud Prosecution Units',
+                        summary: 'The Crown Prosecution Service launched specialized litigation departments designed to investigate cross-border digital financial scams.',
+                        date: new Date(currentDate.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+                        source: 'CPS UK',
+                        url: 'https://www.cps.gov.uk'
+                    }
+                ],
+                'family': [
+                    {
+                        id: 341,
+                        title: 'UK Adopts No-Fault Divorce Framework for Family Separation',
+                        summary: 'An updated matrimonial law framework has streamlined child custody and property split proceedings during uncontested separations.',
+                        date: new Date(currentDate.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+                        source: 'Family Law Reports',
+                        url: 'https://www.gov.uk'
+                    }
+                ],
+                'property': [
+                    {
+                        id: 351,
+                        title: 'Leasehold Reform Act Fully Abolishes Marriage Value Ground Rent Fees',
+                        summary: 'In an incredible win for leaseholders, Parliament successfully prohibited developers from collecting ground rent for extended leases.',
+                        date: new Date(currentDate.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+                        source: 'UK Law Gazette',
+                        url: 'https://www.lawgazette.co.uk'
+                    }
+                ]
+            },
+            'EU': {
+                'general': [
+                    {
+                        id: 401,
+                        title: 'European Court of Justice Issues Final Ruling on GDPR Cross-Border Transfers',
+                        summary: 'The ECJ reinforced data protection laws, clarifying strict compliance standards for transferring data from EU citizens to foreign clouds.',
+                        date: new Date(currentDate.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+                        source: 'EU Commission',
+                        url: 'https://ec.europa.eu'
+                    }
+                ],
+                'consumer': [
+                    {
+                        id: 411,
+                        title: 'EU Digital Markets Act Mandates Open Marketplace Protections',
+                        summary: 'New DMA guidelines give consumers full control over default apps and browser services on mobile operating systems.',
+                        date: new Date(currentDate.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+                        source: 'EU Legal News',
+                        url: 'https://ec.europa.eu'
+                    }
+                ],
+                'corporate': [
+                    {
+                        id: 421,
+                        title: 'EU Approves Mandatory Corporate Supply Chain Due Diligence Directives',
+                        summary: 'The Corporate Sustainability Due Diligence Directive (CSDDD) requires EU firms to account for child labor and emissions in supply chains.',
+                        date: new Date(currentDate.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+                        source: 'Europe Corporate Law',
+                        url: 'https://ec.europa.eu'
+                    }
+                ],
+                'criminal': [
+                    {
+                        id: 431,
+                        title: 'Europol Coordinates Major Clean-Up of Money Laundering Networks',
+                        summary: 'A unified European warrant network succeeded in disrupting multiple financial operations running illegal offshore accounts.',
+                        date: new Date(currentDate.getTime() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+                        source: 'Europol News',
+                        url: 'https://www.europol.europa.eu'
+                    }
+                ],
+                'family': [
+                    {
+                        id: 441,
+                        title: 'EU Court Confirms Mutual Recognition of Same-Sex Marriage Rights',
+                        summary: 'The CJEU ruled that family rights and parentage certificates established in one member state must be recognized in all others.',
+                        date: new Date(currentDate.getTime() - 8 * 24 * 60 * 60 * 1000).toISOString(),
+                        source: 'EUR-Lex',
+                        url: 'https://eur-lex.europa.eu'
+                    }
+                ],
+                'property': [
+                    {
+                        id: 451,
+                        title: 'New EU Directives Mandate Energy Certifications for Commercial Real Estate',
+                        summary: 'A new property law directive establishes mandatory green ratings and efficiency compliance deadlines for commercial properties.',
+                        date: new Date(currentDate.getTime() - 6 * 24 * 60 * 60 * 1000).toISOString(),
+                        source: 'EU Property News',
+                        url: 'https://ec.europa.eu'
+                    }
+                ]
+            }
+        };
         const apiKey = process.env.NEWS_API_KEY;
         if (apiKey && apiKey.trim().length > 0) {
             try {
-                let query = `(law OR legal OR court OR "Supreme Court")`;
+                let query = `(law OR legal OR court)`;
+                // Strict regional parameters and negative exclusions
                 if (region === 'India') {
-                    query += ` AND India`;
+                    query += ` AND (India OR Indian OR Delhi OR Mumbai OR "High Court" OR "Supreme Court of India" OR NCLT OR RERA OR "Companies Act")`;
+                    query += ` -Bangladesh -Pakistan -Nepal -"Sri Lanka" -US -"United States" -UK -"United Kingdom"`;
                 }
                 else if (region === 'USA') {
-                    query += ` AND (USA OR "Supreme Court" OR federal)`;
+                    query += ` AND (USA OR "United States" OR federal OR "Supreme Court" OR Congress OR SEC OR FTC)`;
+                    query += ` -India -Indian -UK -Europe -European -Bangladesh -Pakistan`;
+                }
+                else if (region === 'UK') {
+                    query += ` AND (UK OR "United Kingdom" OR Britain OR British OR Parliament OR London)`;
+                    query += ` -India -Indian -US -"United States" -Europe -European -Bangladesh -Pakistan`;
+                }
+                else if (region === 'EU') {
+                    query += ` AND (EU OR "European Union" OR Europe OR European OR Brussels OR Strasbourg OR "European Court")`;
+                    query += ` -India -Indian -US -"United States" -UK -"United Kingdom" -China`;
                 }
                 else {
                     query += ` AND ${region}`;
                 }
-                if (topic && topic !== 'general') {
-                    query += ` AND ${topic}`;
+                // Rich topical subqueries
+                const topicQueries = {
+                    'consumer': `(consumer OR "buyer rights" OR "unfair trade" OR "defective" OR "customer dispute" OR "Consumer Protection Act")`,
+                    'corporate': `(corporate OR company OR companies OR merger OR acquisition OR insolvency OR bankruptcy OR SEC OR SEBI OR NCLT OR ESG)`,
+                    'criminal': `(criminal OR prosecution OR bail OR arrest OR crime OR theft OR homicide OR murder OR fraud OR penal)`,
+                    'family': `(family OR divorce OR custody OR marriage OR alimony OR adoption OR domestic)`,
+                    'property': `(property OR "real estate" OR land OR tenant OR landlord OR lease OR RERA)`
+                };
+                if (topic && topic !== 'general' && topicQueries[topic]) {
+                    query += ` AND ${topicQueries[topic]}`;
                 }
-                const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&sortBy=publishedAt&pageSize=${limit * 2}&apiKey=${apiKey}`;
+                const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&sortBy=publishedAt&pageSize=${limit * 4}&apiKey=${apiKey}`;
                 console.log(`🌐 Fetching real-time news from NewsAPI: ${url}`);
                 const response = await fetch(url);
                 if (response.ok) {
                     const data = await response.json();
                     if (data.status === 'ok' && data.articles && data.articles.length > 0) {
-                        const news = data.articles.slice(0, limit).map((article, index) => ({
+                        let news = data.articles.map((article, index) => ({
                             id: index + 1,
                             title: article.title || 'Legal Development',
                             summary: article.description || article.content || 'A new legal case or ruling has been reported.',
@@ -506,10 +838,73 @@ app.get("/api/news", async (req, res) => {
                             source: article.source?.name || 'News Source',
                             url: article.url || 'https://newsapi.org'
                         }));
-                        console.log(`✅ Fetched ${news.length} real-time news articles from NewsAPI`);
+                        // Post-fetch double validation filter
+                        if (region === 'India') {
+                            news = news.filter((article) => {
+                                const title = article.title.toLowerCase();
+                                const summary = article.summary.toLowerCase();
+                                return !title.includes('bangladesh') && !summary.includes('bangladesh') &&
+                                    !title.includes('pakistan') && !summary.includes('pakistan') &&
+                                    !title.includes('nepal') && !summary.includes('nepal') &&
+                                    !title.includes('sri lanka') && !summary.includes('sri lanka');
+                            });
+                        }
+                        else if (region === 'USA') {
+                            news = news.filter((article) => {
+                                const title = article.title.toLowerCase();
+                                const summary = article.summary.toLowerCase();
+                                return !title.includes('india') && !summary.includes('india') &&
+                                    !title.includes('bangladesh') && !summary.includes('bangladesh');
+                            });
+                        }
+                        else if (region === 'UK') {
+                            news = news.filter((article) => {
+                                const title = article.title.toLowerCase();
+                                const summary = article.summary.toLowerCase();
+                                return !title.includes('india') && !summary.includes('india') &&
+                                    !title.includes('bangladesh') && !summary.includes('bangladesh');
+                            });
+                        }
+                        else if (region === 'EU') {
+                            news = news.filter((article) => {
+                                const title = article.title.toLowerCase();
+                                const summary = article.summary.toLowerCase();
+                                return !title.includes('india') && !summary.includes('india') &&
+                                    !title.includes('bangladesh') && !summary.includes('bangladesh');
+                            });
+                        }
+                        // Post-fetch topic verification filter
+                        const topicKeywords = {
+                            'consumer': ['consumer', 'buyer', 'customer', 'refund', 'product', 'fair trade', 'ccpa', 'ncdrc', 'advertisement', 'commission', 'complaint'],
+                            'corporate': ['corporate', 'company', 'companies', 'merger', 'acquisition', 'insolvency', 'bankruptcy', 'sebi', 'nclt', 'esg', 'shareholder', 'board', 'sec', 'securities'],
+                            'criminal': ['criminal', 'arrest', 'bail', 'police', 'prosecution', 'trial', 'crime', 'murder', 'fraud', 'theft', 'bns', 'ipc', 'accused', 'court', 'prison', 'jail'],
+                            'family': ['family', 'divorce', 'custody', 'marriage', 'alimony', 'maintenance', 'adoption', 'domestic', 'matrimonial', 'spouse'],
+                            'property': ['property', 'real estate', 'land', 'tenant', 'landlord', 'lease', 'rera', 'rent', 'zoning', 'eviction', 'housing']
+                        };
+                        if (topic && topic !== 'general' && topicKeywords[topic]) {
+                            const keywords = topicKeywords[topic];
+                            news = news.filter((article) => {
+                                const title = article.title.toLowerCase();
+                                const summary = article.summary.toLowerCase();
+                                return keywords.some((kw) => title.includes(kw) || summary.includes(kw));
+                            });
+                        }
+                        // If the filtered list has too few articles, backfill from our high-quality local fallback database
+                        if (news.length < limit) {
+                            const regionData = localDatabase[region] || localDatabase['India'];
+                            const topicArticles = regionData[topic] || regionData['general'] || [];
+                            for (const fallback of topicArticles) {
+                                if (news.length >= limit)
+                                    break;
+                                if (!news.some((n) => n.title.toLowerCase() === fallback.title.toLowerCase())) {
+                                    news.push(fallback);
+                                }
+                            }
+                        }
+                        console.log(`✅ Fetched, validated, and backfilled ${news.length} news articles from NewsAPI for ${region}/${topic}`);
                         return res.json({
                             success: true,
-                            news,
+                            news: news.slice(0, limit),
                             region,
                             topic,
                             timestamp: new Date().toISOString()
@@ -522,76 +917,17 @@ app.get("/api/news", async (req, res) => {
                 console.warn(`⚠️ Failed to call NewsAPI, falling back to local news list:`, newsApiError.message);
             }
         }
-        // Local rich fallback database
-        const currentDate = new Date();
-        const newsSources = {
-            'India': [
-                {
-                    id: 1,
-                    title: 'Supreme Court Upholds Right to Privacy in Digital Age',
-                    summary: 'The Supreme Court has reinforced the fundamental right to privacy in the digital era, setting new precedents for data protection and digital rights.',
-                    date: new Date(currentDate.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-                    source: 'The Hindu Legal',
-                    url: 'https://www.thehindu.com'
-                },
-                {
-                    id: 2,
-                    title: 'New Consumer Protection Rules Come into Effect',
-                    summary: 'Enhanced consumer protection regulations now provide stronger safeguards for online transactions and digital services, with stricter penalties for violations.',
-                    date: new Date(currentDate.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-                    source: 'Economic Times',
-                    url: 'https://economictimes.indiatimes.com'
-                },
-                {
-                    id: 3,
-                    title: 'Corporate Law Amendments Focus on ESG Compliance',
-                    summary: 'Recent amendments to corporate law emphasize environmental, social, and governance (ESG) compliance requirements for listed companies.',
-                    date: new Date(currentDate.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-                    source: 'Business Standard',
-                    url: 'https://www.business-standard.com'
-                },
-                {
-                    id: 4,
-                    title: 'Data Protection Bill Passes Parliamentary Committee Review',
-                    summary: 'The Digital Personal Data Protection Bill has cleared the parliamentary committee stage with recommendations for enhanced privacy safeguards.',
-                    date: new Date(currentDate.getTime() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-                    source: 'Live Law',
-                    url: 'https://www.livelaw.in'
-                },
-                {
-                    id: 5,
-                    title: 'Labour Law Reforms Implemented Across States',
-                    summary: 'New labour codes are being implemented across various states, streamlining employment regulations and worker protection measures.',
-                    date: new Date(currentDate.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-                    source: 'Indian Express',
-                    url: 'https://indianexpress.com'
+        const regionData = localDatabase[region] || localDatabase['India'];
+        const topicArticles = regionData[topic] || regionData['general'] || [];
+        // If the topic does not have enough articles, backfill with general news of that region
+        let filteredNews = [...topicArticles];
+        if (filteredNews.length < limit && topic !== 'general') {
+            const generalArticles = regionData['general'] || [];
+            for (const art of generalArticles) {
+                if (!filteredNews.find(a => a.id === art.id)) {
+                    filteredNews.push(art);
                 }
-            ],
-            'USA': [
-                {
-                    id: 6,
-                    title: 'Supreme Court Rules on AI and Copyright Law',
-                    summary: 'Landmark decision establishes framework for AI-generated content and intellectual property rights in the digital age.',
-                    date: new Date(currentDate.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-                    source: 'Legal Tech News',
-                    url: 'https://www.law.com/legaltechnews'
-                },
-                {
-                    id: 7,
-                    title: 'New Federal Data Privacy Legislation Introduced',
-                    summary: 'Comprehensive federal data privacy bill aims to create uniform standards across all states for consumer data protection.',
-                    date: new Date(currentDate.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-                    source: 'Privacy Law Journal',
-                    url: 'https://www.law.com'
-                }
-            ]
-        };
-        const regionNews = newsSources[region] || newsSources['India'];
-        // Filter by topic if specified
-        let filteredNews = regionNews;
-        if (topic && topic !== 'general') {
-            filteredNews = regionNews.filter((article) => article.title.toLowerCase().includes(topic.toLowerCase()) ||
-                article.summary.toLowerCase().includes(topic.toLowerCase()));
+            }
         }
         res.json({
             success: true,

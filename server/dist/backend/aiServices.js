@@ -81,16 +81,24 @@ function sanitizeAIContent(content) {
 // Extract clean legal citations (Acts, Sections, Articles, Case Names)
 function extractCitations(content) {
     const citations = [];
-    const actPattern = /\b([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)*\s+Act(?:,?\s*\d{4})?)\b/g;
+    // 1. Acts, e.g. "Consumer Protection Act, 2019", "Negotiable Instruments Act, 1881"
+    const actPattern = /\b([A-Z][a-zA-Z\s]+Act(?:,?\s*\d{4})?)\b/g;
     const acts = content.match(actPattern) || [];
     citations.push(...acts);
-    const sectionPattern = /\bSection\s+(\d+[A-Z]?)\b/gi;
+    // 2. Major codes and constitutions that don't end in "Act"
+    const codesPattern = /\b(Indian Penal Code|Constitution of India|Code of Criminal Procedure|Code of Civil Procedure|Civil Procedure Code|Criminal Procedure Code|IPC|CrPC|CPC|Bharatiya Nyaya Sanhita|BNS|Bharatiya Nagarik Suraksha Sanhita|BNSS|Bharatiya Sakshya Adhiniyam|BSA)\b/gi;
+    const codes = content.match(codesPattern) || [];
+    citations.push(...codes);
+    // 3. Sections, e.g. "Section 138", "Sec. 138", "Sec 138", "Sections 138"
+    const sectionPattern = /\b(?:Section|Sec\.?|Sections)\s+(\d+[A-Z]?)\b/gi;
     const sections = content.match(sectionPattern) || [];
     citations.push(...sections);
-    const articlePattern = /\bArticle\s+(\d+[A-Z]?)\b/gi;
+    // 4. Articles, e.g. "Article 21", "Art. 21", "Art 21"
+    const articlePattern = /\b(?:Article|Art\.?)\s+(\d+[A-Z]?)\b/gi;
     const articles = content.match(articlePattern) || [];
     citations.push(...articles);
-    const casePattern = /\b([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)*\s+v(?:s)?\.\s+[A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)*)\b/g;
+    // 5. Case Names, e.g. "Marbury v. Madison", "K.S. Puttaswamy v. Union of India"
+    const casePattern = /\b([A-Z][a-zA-Z0-9'\.\s]+v(?:s)?\.\s+[A-Z][a-zA-Z0-9'\.\s]+)\b/g;
     const cases = content.match(casePattern) || [];
     citations.push(...cases);
     const cleanedCitations = citations
@@ -100,6 +108,7 @@ function extractCitations(content) {
             !/^\[\d+\]$/.test(c) &&
             !/^\d+$/.test(c) &&
             c.toLowerCase() !== 'sources' &&
+            c.toLowerCase() !== 'act' &&
             c.length > 2;
     });
     return [...new Set(cleanedCitations)];

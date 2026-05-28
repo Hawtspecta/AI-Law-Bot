@@ -13,6 +13,7 @@ import {
 import { apiClient, MetricsResponse } from "../services/api";
 import { toast } from "sonner";
 import { getTranslation } from "../lib/translations";
+import { useScrollReveal } from "../hooks/useScrollReveal";
 
 interface HeroProps {
   currentLanguage?: string;
@@ -21,11 +22,11 @@ interface HeroProps {
 const Hero = ({ currentLanguage = 'en' }: HeroProps) => {
   // Removed statistics section and metrics state
   const [isLoading, setIsLoading] = useState(false);
+  const revealRef = useScrollReveal();
 
   const handleStartChat = async () => {
     setIsLoading(true);
     try {
-      // ...existing code...
       const response = await apiClient.createSession('anonymous', 'New Conversation');
       if (response.success) {
         localStorage.setItem('currentSessionId', response.session.sessionId);
@@ -47,7 +48,7 @@ const Hero = ({ currentLanguage = 'en' }: HeroProps) => {
   };
 
   const handleLearnMore = () => {
-    // Scroll to detailed feature explanation sections (Feature #10)
+    // Scroll to detailed feature explanation sections
     const featuresElement = document.getElementById('how-it-works');
     if (featuresElement) {
       featuresElement.scrollIntoView({ behavior: 'smooth' });
@@ -55,41 +56,46 @@ const Hero = ({ currentLanguage = 'en' }: HeroProps) => {
   };
 
   return (
-    <section id="hero" className="relative py-20 bg-gradient-to-br from-primary/5 via-secondary/10 to-accent/5 overflow-hidden">
+    <section id="hero" className="relative py-24 bg-gradient-to-br from-primary/5 via-secondary/15 to-accent/5 overflow-hidden">
       {/* Background Pattern */}
       <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+      
       <div className="container mx-auto px-4 relative z-10">
-        <div className="space-y-8 animate-fade-up max-w-3xl mx-auto text-center">
-          <div className="inline-flex items-center px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium justify-center">
-            <Shield className="h-4 w-4 mr-2" />
+        <div ref={revealRef} className="space-y-8 reveal-fade-up max-w-3xl mx-auto text-center">
+          <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-accent/10 border border-accent/20 text-accent text-xs font-semibold justify-center shadow-sm animate-pulse-soft">
+            <Shield className="h-3.5 w-3.5 mr-1.5" />
             AI-Powered Legal Assistant
           </div>
-          <h1 className="text-4xl md:text-6xl font-heading font-bold text-primary leading-tight">
+          <h1 className="text-4xl md:text-6.5xl font-heading font-extrabold text-primary leading-tight tracking-tight">
             {getTranslation('heroTitle', currentLanguage)}{' '}
-            <span className="text-accent">{getTranslation('heroSubtitle', currentLanguage)}</span>
+            <span className="text-accent">
+              {getTranslation('heroSubtitle', currentLanguage)}
+            </span>
           </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl leading-relaxed mx-auto">
+          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl leading-relaxed mx-auto font-normal">
             {getTranslation('heroDescription', currentLanguage)}
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Button
               onClick={handleStartChat}
               size="lg"
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto h-12 px-6 rounded-xl font-medium shadow-md transition-smooth hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
             >
               <MessageSquare className="h-5 w-5 mr-2" />
               {getTranslation('startChat', currentLanguage)}
             </Button>
-            <Button onClick={handleLearnMore} size="lg" variant="outline" className="w-full sm:w-auto">
+            <Button 
+              onClick={handleLearnMore} 
+              size="lg" 
+              variant="outline" 
+              className="w-full sm:w-auto h-12 px-6 rounded-xl font-medium transition-smooth hover:bg-primary hover:text-primary-foreground hover:border-primary shadow-sm cursor-pointer"
+            >
               <ArrowRight className="h-5 w-5 mr-2" />
               {getTranslation('learnMore', currentLanguage)}
             </Button>
           </div>
         </div>
       </div>
-      {/* Floating Elements */}
-      <div className="absolute top-20 left-10 w-20 h-20 bg-primary/10 rounded-full blur-xl animate-pulse"></div>
-      <div className="absolute bottom-20 right-10 w-32 h-32 bg-accent/10 rounded-full blur-xl animate-pulse delay-1000"></div>
     </section>
   );
 };

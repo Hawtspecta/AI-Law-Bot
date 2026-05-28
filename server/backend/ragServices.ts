@@ -155,28 +155,32 @@ const vectorStore = new SimpleVectorStore();
 export function extractLegalCitations(text: string): string[] {
   const citations: string[] = [];
   
-  // 1. Extract Act names, e.g. "Negotiable Instruments Act, 1881", "Consumer Protection Act, 2019", "Indian Penal Code, 1860"
-  // Supports both standard and long Act titles with or without years
-  const actPattern = /([A-Z][a-zA-Z]+(?: [A-Z][a-zA-Z]+)* Act(?:,?\s*\d{4})?)/g;
+  // 1. Extract Act names, e.g. "Negotiable Instruments Act, 1881", "Consumer Protection Act, 2019"
+  const actPattern = /\b([A-Z][a-zA-Z\s]+Act(?:,?\s*\d{4})?)\b/g;
   const acts = text.match(actPattern) || [];
   citations.push(...acts);
   
-  // 2. Extract Section numbers (e.g., "Section 12", "Section 138A")
-  const sectionPattern = /Section\s+(\d+[A-Z]?)/gi;
+  // 2. Major codes and constitutions that don't end in "Act"
+  const codesPattern = /\b(Indian Penal Code|Constitution of India|Code of Criminal Procedure|Code of Civil Procedure|Civil Procedure Code|Criminal Procedure Code|IPC|CrPC|CPC|Bharatiya Nyaya Sanhita|BNS|Bharatiya Nagarik Suraksha Sanhita|BNSS|Bharatiya Sakshya Adhiniyam|BSA)\b/gi;
+  const codes = text.match(codesPattern) || [];
+  citations.push(...codes);
+  
+  // 3. Sections, e.g. "Section 138", "Sec. 138", "Sec 138", "Sections 138"
+  const sectionPattern = /\b(?:Section|Sec\.?|Sections)\s+(\d+[A-Z]?)\b/gi;
   const sections = text.match(sectionPattern) || [];
   citations.push(...sections);
   
-  // 3. Extract Article numbers (e.g., "Article 21", "Article 14")
-  const articlePattern = /Article\s+(\d+[A-Z]?)/gi;
+  // 4. Articles, e.g. "Article 21", "Art. 21", "Art 21"
+  const articlePattern = /\b(?:Article|Art\.?)\s+(\d+[A-Z]?)\b/gi;
   const articles = text.match(articlePattern) || [];
   citations.push(...articles);
 
-  // 4. Extract Case Names (e.g., "K.S. Puttaswamy v. Union of India" or "Marbury v. Madison")
-  const casePattern = /([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\s+v(?:s)?\.\s+[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/g;
+  // 5. Case Names, e.g. "Marbury v. Madison", "K.S. Puttaswamy v. Union of India"
+  const casePattern = /\b([A-Z][a-zA-Z0-9'\.\s]+v(?:s)?\.\s+[A-Z][a-zA-Z0-9'\.\s]+)\b/g;
   const cases = text.match(casePattern) || [];
   citations.push(...cases);
   
-  // 5. Extract descriptions from the Sources section if it exists
+  // 6. Extract descriptions from the Sources section if it exists
   const sourcesSectionMatch = text.match(/<h3[^>]*>Sources<\/h3>\s*<ol[^>]*>([\s\S]*?)<\/ol>/i);
   if (sourcesSectionMatch) {
     const listItemsText = sourcesSectionMatch[1];
@@ -196,11 +200,11 @@ export function extractLegalCitations(text: string): string[] {
   const cleanedCitations = citations
     .map(c => c.trim())
     .filter(c => {
-      // Remove raw brackets, plain numbers, empty strings, and standard helper headers
       return c && 
              !/^\[\d+\]$/.test(c) && 
              !/^\d+$/.test(c) && 
              c.toLowerCase() !== 'sources' &&
+             c.toLowerCase() !== 'act' &&
              c.length > 2;
     });
 
@@ -225,8 +229,8 @@ export async function ragPipeline(query: string, language = 'en', options: any =
     if (searchResults.length > 0) {
       context = 'Relevant Legal Context:\n\n';
       searchResults.forEach((result, index) => {
-        // Similarity threshold
-        if (result.similarity > 0.1) {
+        // Lowered similarity threshold to ensure the top matching legal provisions are always provided
+        if (result.similarity >= 0.0) {
           context += `[Source ${index + 1}]: ${result.document.content.substring(0, 1200)}\n\n`;
           sources.push({
             title: result.document.title || `Source ${index + 1}`,

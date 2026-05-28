@@ -34,6 +34,9 @@ import { getTranslation } from "@/lib/translations";
 
 import logoImage from "@/assets/logo.jpg";
 
+import { useNavigate } from "react-router-dom";
+
+
 
 
 interface HeaderProps {
@@ -47,6 +50,8 @@ interface HeaderProps {
 
 
 const Header = ({ onLanguageChange, currentLanguage = 'en' }: HeaderProps) => {
+
+  const navigate = useNavigate();
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -112,22 +117,24 @@ const Header = ({ onLanguageChange, currentLanguage = 'en' }: HeaderProps) => {
         <div className="flex h-16 items-center justify-between">
 
           {/* Logo */}
-
-          <div className="flex items-center space-x-2">
-
+          <button 
+            onClick={() => {
+              if (window.location.pathname === "/") {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              } else {
+                navigate("/");
+              }
+            }}
+            className="flex items-center space-x-2 cursor-pointer focus:outline-none hover:opacity-90 transition-opacity"
+            aria-label="Law Assistant Home"
+          >
             <img
-
               src={logoImage}
-
               alt="AI Law Assistant logo"
-
               className="h-8 w-8 rounded-lg object-cover"
-
             />
-
             <span className="font-heading font-bold text-xl text-primary">Law Assistant</span>
-
-          </div>
+          </button>
 
 
 

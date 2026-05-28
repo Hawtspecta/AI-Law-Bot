@@ -30,6 +30,9 @@ import {
 
 import { getTranslation } from "@/lib/translations";
 
+import { useScrollReveal } from "../hooks/useScrollReveal";
+
+
 
 
 interface HowItWorksProps {
@@ -43,6 +46,8 @@ interface HowItWorksProps {
 
 
 const HowItWorks = ({ currentLanguage = 'en' }: HowItWorksProps) => {
+
+  const revealRef = useScrollReveal();
 
   const steps = [
 
@@ -154,11 +159,11 @@ const HowItWorks = ({ currentLanguage = 'en' }: HowItWorksProps) => {
 
   return (
 
-    <section id="how-it-works" className="py-20 bg-background">
+    <section id="how-it-works" className="py-20 bg-transparent">
 
       <div className="container mx-auto px-4">
 
-        <div className="text-center mb-16 animate-fade-up">
+        <div ref={revealRef} className="text-center mb-16 reveal-fade-up">
 
           <h2 className="text-4xl md:text-5xl font-heading font-bold text-primary mb-4">
 
@@ -186,7 +191,7 @@ const HowItWorks = ({ currentLanguage = 'en' }: HowItWorksProps) => {
 
               key={step.number}
 
-              className="p-6 gradient-card border-border/50 hover:border-accent/50 transition-all duration-300 hover:shadow-lg group text-center"
+              className="p-6 gradient-card border-border/40 hover:border-accent/40 shadow-sm hover:shadow-md transition-smooth hover:-translate-y-1 rounded-2xl group text-center relative overflow-hidden"
 
             >
 
@@ -250,7 +255,7 @@ const HowItWorks = ({ currentLanguage = 'en' }: HowItWorksProps) => {
 
               key={index}
 
-              className="p-6 gradient-card border-border/50 hover:border-accent/50 transition-all duration-300 text-center"
+              className="p-6 gradient-card border-border/40 hover:border-accent/40 shadow-sm hover:shadow-md transition-smooth rounded-2xl text-center"
 
             >
 

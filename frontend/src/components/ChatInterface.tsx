@@ -20,6 +20,9 @@ import { toast } from "sonner";
 
 import { getTranslation } from "@/lib/translations";
 
+import { useScrollReveal } from "../hooks/useScrollReveal";
+
+
 const escapeHtml = (value: string) => value
   .replace(/&/g, '&amp;')
   .replace(/</g, '&lt;')
@@ -55,6 +58,8 @@ interface ChatInterfaceProps {
 
 const ChatInterface = ({ currentLanguage = 'en' }: ChatInterfaceProps) => {
 
+  const revealRef = useScrollReveal();
+
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
@@ -89,9 +94,13 @@ const ChatInterface = ({ currentLanguage = 'en' }: ChatInterfaceProps) => {
 
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      // Perform smooth, hardware-accelerated scroll to bottom
+      scrollRef.current.scrollTo({
+        top: scrollRef.current.scrollHeight,
+        behavior: "smooth"
+      });
     }
-  }, [messages]);
+  }, [messages, isLoading]);
 
   const handleSend = async () => {
 
@@ -385,7 +394,7 @@ const ChatInterface = ({ currentLanguage = 'en' }: ChatInterfaceProps) => {
 
       <div className="container mx-auto px-4">
 
-        <div className="text-center mb-12 animate-fade-up">
+        <div ref={revealRef} className="text-center mb-12 reveal-fade-up">
 
           <h2 className="text-4xl md:text-5xl font-heading font-bold text-primary mb-4">
 
@@ -407,7 +416,7 @@ const ChatInterface = ({ currentLanguage = 'en' }: ChatInterfaceProps) => {
 
           {/* Example Prompts */}
 
-          <Card className="p-6 gradient-card border-border/50 animate-fade-in">
+          <Card className="p-6 gradient-card border-border/40 shadow-sm hover:shadow-md transition-smooth rounded-2xl relative overflow-hidden">
 
             <h3 className="text-lg font-heading font-semibold text-primary mb-4">{getTranslation('tryAsking', currentLanguage)}</h3>
 
@@ -439,11 +448,18 @@ const ChatInterface = ({ currentLanguage = 'en' }: ChatInterfaceProps) => {
 
           {/* Chat Window */}
 
-          <Card className="lg:col-span-2 p-6 gradient-card border-border/50 animate-fade-in">
+          <Card className="lg:col-span-2 p-6 gradient-card border-border/40 shadow-sm hover:shadow-md transition-smooth rounded-2xl relative overflow-hidden">
 
-            <ScrollArea className="h-[500px] pr-4 mb-4">
+            {/* Reassuring privacy notice banner */}
+            <div className="flex items-center space-x-2 text-xs text-muted-foreground bg-secondary/50 border border-border/30 rounded-xl p-3 mb-6 animate-pulse-soft">
+              <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span>🔒 <strong>Fully Secure Consultation:</strong> Your conversation is encrypted. Anonymization removes sensitive details. Ask any legal concerns with peace of mind.</span>
+            </div>
 
-              <div ref={scrollRef} className="space-y-4">
+            <div 
+              ref={scrollRef} 
+              className="h-[440px] overflow-y-auto pr-4 mb-4 space-y-4 scroll-smooth"
+            >
 
                 {messages.map((message, idx) => (
 
@@ -467,11 +483,13 @@ const ChatInterface = ({ currentLanguage = 'en' }: ChatInterfaceProps) => {
 
                       <div
 
-                        className={`inline-block p-4 rounded-2xl ${
+                        className={`inline-block p-4 rounded-2xl shadow-sm text-left ${
 
-                          message.role === "user" ? "bg-accent text-white" : "bg-card border border-border"
+                          message.role === "user" 
+                            ? "bg-accent text-white rounded-tr-none" 
+                            : "bg-card border border-border/60 border-l-4 border-l-accent rounded-tl-none"
 
-                        }`}
+                        } animate-scale-in`}
 
                       >
 
@@ -522,13 +540,13 @@ const ChatInterface = ({ currentLanguage = 'en' }: ChatInterfaceProps) => {
 
                     <div className="flex-1">
 
-                      <div className="inline-block p-4 rounded-2xl bg-card border border-border">
+                      <div className="inline-block p-4 rounded-2xl bg-card border border-border/60 border-l-4 border-l-accent rounded-tl-none animate-pulse-soft shadow-sm">
 
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2.5">
 
-                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span className="flex h-2 w-2 rounded-full bg-accent animate-ping"></span>
 
-                          <p className="text-sm text-muted-foreground">{getTranslation('aiIsThinking', currentLanguage)}</p>
+                          <p className="text-sm text-muted-foreground font-medium">{getTranslation('aiIsThinking', currentLanguage)}</p>
 
                         </div>
 
@@ -540,9 +558,7 @@ const ChatInterface = ({ currentLanguage = 'en' }: ChatInterfaceProps) => {
 
                 )}
 
-              </div>
-
-            </ScrollArea>
+            </div>
 
 
 

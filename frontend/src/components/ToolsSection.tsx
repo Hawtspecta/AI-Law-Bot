@@ -34,6 +34,9 @@ import { getTranslation } from "@/lib/translations";
 
 import { useNavigate } from "react-router-dom";
 
+import { useScrollReveal } from "../hooks/useScrollReveal";
+
+
 
 
 interface ToolsSectionProps {
@@ -49,6 +52,8 @@ const ToolsSection = ({ currentLanguage = 'en' }: ToolsSectionProps) => {
   const [isLoading, setIsLoading] = useState<string | null>(null);
 
   const navigate = useNavigate();
+
+  const revealRef = useScrollReveal();
 
 
 
@@ -127,107 +132,56 @@ const ToolsSection = ({ currentLanguage = 'en' }: ToolsSectionProps) => {
   const tools = [
 
     {
-
       id: 'legal-research',
-
       title: getTranslation('legalResearchTool', currentLanguage),
-
       icon: Search,
-
-      color: 'text-blue-500',
-
-      bgColor: 'bg-blue-500/10',
-
+      color: 'text-accent',
+      bgColor: 'bg-accent/10',
       features: [
-
         getTranslation('vectorBasedSearch', currentLanguage),
-
         getTranslation('statuteRetrieval', currentLanguage),
-
         getTranslation('aiSummarization', currentLanguage),
-
         getTranslation('citationBackedResults', currentLanguage)
-
       ]
-
     },
-
     {
-
       id: 'contract-analyzer',
-
       title: getTranslation('contractAnalyzer', currentLanguage),
-
       icon: FileText,
-
-      color: 'text-green-500',
-
-      bgColor: 'bg-green-500/10',
-
+      color: 'text-emerald-600 dark:text-emerald-400',
+      bgColor: 'bg-emerald-500/10',
       features: [
-
         getTranslation('clauseExtraction', currentLanguage),
-
         getTranslation('riskAssessment', currentLanguage),
-
         getTranslation('complianceChecking', currentLanguage),
-
         getTranslation('riskLevelFlagging', currentLanguage)
-
       ]
-
     },
-
     {
-
       id: 'form-assistance',
-
       title: getTranslation('legalNewsForms', currentLanguage),
-
       icon: ClipboardList,
-
-      color: 'text-purple-500',
-
-      bgColor: 'bg-purple-500/10',
-
+      color: 'text-indigo-600 dark:text-indigo-400',
+      bgColor: 'bg-indigo-500/10',
       features: [
-
         getTranslation('logicValidation', currentLanguage),
-
         getTranslation('formRequirementChecking', currentLanguage),
-
         getTranslation('errorMinimization', currentLanguage),
-
         getTranslation('documentPreparation', currentLanguage)
-
       ]
-
     },
-
     {
-
       id: 'document-comparator',
-
       title: getTranslation('documentComparator', currentLanguage),
-
       icon: GitCompare,
-
-      color: 'text-orange-500',
-
-      bgColor: 'bg-orange-500/10',
-
+      color: 'text-amber-600 dark:text-amber-400',
+      bgColor: 'bg-amber-500/10',
       features: [
-
         getTranslation('nli', currentLanguage),
-
         getTranslation('clauseInvalidation', currentLanguage),
-
         getTranslation('visualRedline', currentLanguage),
-
         getTranslation('lawComplianceChecking', currentLanguage)
-
       ]
-
     }
 
   ];
@@ -236,11 +190,11 @@ const ToolsSection = ({ currentLanguage = 'en' }: ToolsSectionProps) => {
 
   return (
 
-    <section id="tools" className="py-20 bg-secondary/30">
+    <section id="tools" className="py-20 bg-transparent">
 
       <div className="container mx-auto px-4">
 
-        <div className="text-center mb-16 animate-fade-up">
+        <div ref={revealRef} className="text-center mb-16 reveal-fade-up">
 
           <h2 className="text-4xl md:text-5xl font-heading font-bold text-primary mb-4">
 
@@ -266,7 +220,7 @@ const ToolsSection = ({ currentLanguage = 'en' }: ToolsSectionProps) => {
 
               key={tool.id}
 
-              className="p-6 gradient-card border-border/50 hover:border-accent/50 transition-all duration-300 hover:shadow-lg group"
+              className="p-6 gradient-card border-border/40 hover:border-accent/40 shadow-sm hover:shadow-md hover:-translate-y-1 transition-smooth rounded-2xl group relative overflow-hidden"
 
             >
 
@@ -352,7 +306,7 @@ const ToolsSection = ({ currentLanguage = 'en' }: ToolsSectionProps) => {
 
                     <>
 
-                      {getTranslation('tryDemo', currentLanguage)}
+                      {getTranslation('Try Now', currentLanguage)}
 
                       <ArrowRight className="h-4 w-4 ml-2" />
 
