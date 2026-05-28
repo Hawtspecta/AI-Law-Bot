@@ -155,27 +155,56 @@ const vectorStore = new SimpleVectorStore();
 export function extractLegalCitations(text: string): string[] {
   const citations: string[] = [];
   
-  // Bracketed references like [1], [2] or (See section X)
-  const bracketPattern = /\[\d+\]|\(See [^)]+\)/g;
-  const brackets = text.match(bracketPattern) || [];
-  citations.push(...brackets);
-  
-  // Extract Act names e.g., "Negotiable Instruments Act, 1881" or "Consumer Protection Act, 2019"
-  const actPattern = /([A-Z][a-z]+(?: [A-Z][a-z]+)* Act,?\s*\d{4})/g;
+  // 1. Extract Act names, e.g. "Negotiable Instruments Act, 1881", "Consumer Protection Act, 2019", "Indian Penal Code, 1860"
+  // Supports both standard and long Act titles with or without years
+  const actPattern = /([A-Z][a-zA-Z]+(?: [A-Z][a-zA-Z]+)* Act(?:,?\s*\d{4})?)/g;
   const acts = text.match(actPattern) || [];
   citations.push(...acts);
   
-  // Extract Section numbers
+  // 2. Extract Section numbers (e.g., "Section 12", "Section 138A")
   const sectionPattern = /Section\s+(\d+[A-Z]?)/gi;
   const sections = text.match(sectionPattern) || [];
   citations.push(...sections);
   
-  // Extract Article numbers
+  // 3. Extract Article numbers (e.g., "Article 21", "Article 14")
   const articlePattern = /Article\s+(\d+[A-Z]?)/gi;
   const articles = text.match(articlePattern) || [];
   citations.push(...articles);
+
+  // 4. Extract Case Names (e.g., "K.S. Puttaswamy v. Union of India" or "Marbury v. Madison")
+  const casePattern = /([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\s+v(?:s)?\.\s+[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/g;
+  const cases = text.match(casePattern) || [];
+  citations.push(...cases);
   
-  return [...new Set(citations)];
+  // 5. Extract descriptions from the Sources section if it exists
+  const sourcesSectionMatch = text.match(/<h3[^>]*>Sources<\/h3>\s*<ol[^>]*>([\s\S]*?)<\/ol>/i);
+  if (sourcesSectionMatch) {
+    const listItemsText = sourcesSectionMatch[1];
+    const liPattern = /<li[^>]*>([\s\S]*?)<\/li>/gi;
+    let liMatch;
+    while ((liMatch = liPattern.exec(listItemsText)) !== null) {
+      // Strip HTML tags
+      const rawText = liMatch[1].replace(/<[^>]+>/g, '').trim();
+      // Only keep descriptive source titles (skip plain URLs and extremely long text)
+      if (rawText && !rawText.startsWith('http') && rawText.length < 150) {
+        citations.push(rawText);
+      }
+    }
+  }
+
+  // Deduplicate and filter out noisy items
+  const cleanedCitations = citations
+    .map(c => c.trim())
+    .filter(c => {
+      // Remove raw brackets, plain numbers, empty strings, and standard helper headers
+      return c && 
+             !/^\[\d+\]$/.test(c) && 
+             !/^\d+$/.test(c) && 
+             c.toLowerCase() !== 'sources' &&
+             c.length > 2;
+    });
+
+  return [...new Set(cleanedCitations)];
 }
 
 // RAG pipeline implementation
@@ -187,7 +216,7 @@ export async function ragPipeline(query: string, language = 'en', options: any =
     const queryEmbedding = generateSimpleEmbedding(query);
     
     // Step 2: Search for relevant documents
-    const searchResults = await vectorStore.search(queryEmbedding, 5);
+    const searchResults = await vectorStore.search(queryEmbedding, 3);
     
     // Step 3: Prepare context
     let context = '';
@@ -198,7 +227,7 @@ export async function ragPipeline(query: string, language = 'en', options: any =
       searchResults.forEach((result, index) => {
         // Similarity threshold
         if (result.similarity > 0.1) {
-          context += `[Source ${index + 1}]: ${result.document.content}\n\n`;
+          context += `[Source ${index + 1}]: ${result.document.content.substring(0, 1200)}\n\n`;
           sources.push({
             title: result.document.title || `Source ${index + 1}`,
             source: result.document.source || 'Database',

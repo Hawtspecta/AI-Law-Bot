@@ -14,8 +14,6 @@ import LegalNews from "@/components/LegalNews";
 
 import PrivacySettings from "@/components/PrivacySettings";
 
-import ConnectionStatus from "@/components/ConnectionStatus";
-
 import Footer from "@/components/Footer";
 
 import { getTranslation } from "@/lib/translations";
@@ -83,8 +81,6 @@ const Index = () => {
       </main>
 
       <Footer currentLanguage={currentLanguage} />
-
-      <ConnectionStatus />
 
     </div>
 

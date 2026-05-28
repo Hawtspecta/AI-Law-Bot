@@ -36,6 +36,8 @@ import { useNavigate } from "react-router-dom";
 
 import { getTranslation } from "@/lib/translations";
 
+import ToolNavigationSidebar from "@/components/ToolNavigationSidebar";
+
 
 
 const LegalResearch = ({ currentLanguage = 'en' }) => {
@@ -111,58 +113,37 @@ const LegalResearch = ({ currentLanguage = 'en' }) => {
 
 
   return (
-
     <div className="min-h-screen bg-background">
-
       {/* Header */}
-
       <div className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-
         <div className="container mx-auto px-4">
-
           <div className="flex h-16 items-center justify-between">
-
             <div className="flex items-center space-x-4">
-
               <Button
-
                 variant="ghost"
-
                 size="sm"
-
                 onClick={() => navigate("/")}
-
                 className="flex items-center space-x-2"
-
               >
-
                 <ArrowLeft className="h-4 w-4" />
-
                 <span>{getTranslation('backToHome', currentLanguage)}</span>
-
               </Button>
-
               <div className="flex items-center space-x-2">
-
                 <Search className="h-6 w-6 text-primary" />
-
                 <h1 className="text-xl font-bold text-primary">{getTranslation('legalResearchTool', currentLanguage)}</h1>
-
               </div>
-
             </div>
-
           </div>
-
         </div>
-
       </div>
 
-
-
       <div className="container mx-auto px-4 py-8">
-
-        <div className="max-w-4xl mx-auto">
+        <div className="grid lg:grid-cols-[260px_minmax(0,1fr)] gap-8 items-start">
+          <div className="hidden lg:block">
+            <ToolNavigationSidebar currentLanguage={currentLanguage} />
+          </div>
+          <div className="min-w-0 w-full">
+            <div className="max-w-4xl mx-auto">
 
           {/* Search Section */}
 
@@ -352,57 +333,6 @@ const LegalResearch = ({ currentLanguage = 'en' }) => {
 
 
 
-              {/* Sources */}
-
-              {results.results.sources && results.results.sources.length > 0 && (
-
-                <Card className="p-6">
-
-                  <div className="flex items-center space-x-2 mb-4">
-
-                    <Info className="h-5 w-5 text-purple-500" />
-
-                    <h3 className="text-lg font-semibold">{getTranslation('sourceDocuments', currentLanguage)}</h3>
-
-                  </div>
-
-                  <div className="space-y-3">
-
-                    {results.results.sources.map((source: any, index: number) => (
-
-                      <div key={index} className="border rounded-lg p-4">
-
-                        <div className="flex items-center justify-between mb-2">
-
-                          <h4 className="font-medium">{source.title || `${getTranslation('source', currentLanguage)} ${index + 1}`}</h4>
-
-                          <span className="text-xs text-muted-foreground">
-
-                            Similarity: {(source.similarity * 100).toFixed(1)}%
-
-                          </span>
-
-                        </div>
-
-                        <p className="text-sm text-muted-foreground">{source.content}</p>
-
-                        {source.source && (
-
-                          <p className="text-xs text-muted-foreground mt-2">Source: {source.source}</p>
-
-                        )}
-
-                      </div>
-
-                    ))}
-
-                  </div>
-
-                </Card>
-
-              )}
-
-
 
               {/* Search Metadata */}
 
@@ -497,9 +427,9 @@ const LegalResearch = ({ currentLanguage = 'en' }) => {
           </Card>
 
         </div>
-
+          </div>
+        </div>
       </div>
-
     </div>
 
   );

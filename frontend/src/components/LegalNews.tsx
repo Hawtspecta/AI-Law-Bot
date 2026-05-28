@@ -48,6 +48,8 @@ const LegalNews = ({ currentLanguage = 'en' }: LegalNewsProps) => {
 
   const [selectedTopic, setSelectedTopic] = useState('general');
 
+  const [limit, setLimit] = useState(6);
+
 
 
   const regions = [
@@ -86,7 +88,7 @@ const LegalNews = ({ currentLanguage = 'en' }: LegalNewsProps) => {
 
     loadNews();
 
-  }, [selectedRegion, selectedTopic]);
+  }, [selectedRegion, selectedTopic, limit]);
 
 
 
@@ -96,7 +98,7 @@ const LegalNews = ({ currentLanguage = 'en' }: LegalNewsProps) => {
 
     try {
 
-      const response = await apiClient.getLegalNews(selectedRegion, selectedTopic, 6);
+      const response = await apiClient.getLegalNews(selectedRegion, selectedTopic, limit);
 
       if (response.success) {
 
@@ -172,7 +174,10 @@ const LegalNews = ({ currentLanguage = 'en' }: LegalNewsProps) => {
 
               value={selectedRegion}
 
-              onChange={(e) => setSelectedRegion(e.target.value)}
+              onChange={(e) => {
+                setSelectedRegion(e.target.value);
+                setLimit(6);
+              }}
 
               className="px-3 py-2 rounded-md border border-border bg-background text-sm"
 
@@ -202,7 +207,10 @@ const LegalNews = ({ currentLanguage = 'en' }: LegalNewsProps) => {
 
               value={selectedTopic}
 
-              onChange={(e) => setSelectedTopic(e.target.value)}
+              onChange={(e) => {
+                setSelectedTopic(e.target.value);
+                setLimit(6);
+              }}
 
               className="px-3 py-2 rounded-md border border-border bg-background text-sm"
 
@@ -255,10 +263,6 @@ const LegalNews = ({ currentLanguage = 'en' }: LegalNewsProps) => {
           </Button>
 
         </div>
-
-
-
-        {/* News Grid */}
 
         {isLoading ? (
 
@@ -346,7 +350,9 @@ const LegalNews = ({ currentLanguage = 'en' }: LegalNewsProps) => {
 
                       size="sm"
 
-                      className="text-xs group-hover:text-accent"
+                      className="text-xs"
+
+                      onClick={() => article.url && window.open(article.url, '_blank', 'noopener,noreferrer')}
 
                     >
 
@@ -386,7 +392,7 @@ const LegalNews = ({ currentLanguage = 'en' }: LegalNewsProps) => {
 
             variant="outline"
 
-            onClick={loadNews}
+            onClick={() => setLimit(prev => prev + 6)}
 
             disabled={isLoading}
 

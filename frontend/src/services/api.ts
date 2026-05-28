@@ -300,6 +300,8 @@ export interface LegalNewsResponse {
 
     source: string;
 
+    url?: string;
+
   }>;
 
   region: string;
@@ -497,6 +499,36 @@ class ApiClient {
         timestamp: new Date().toISOString(),
 
         ragEnabled: false
+
+      };
+
+    }
+
+  }
+
+  // Update privacy settings
+
+  async updatePrivacy(data: { anonymizeQueries: boolean; dataRetentionDays: number }): Promise<{ success: boolean; message: string }> {
+
+    try {
+
+      return await this.request<{ success: boolean; message: string }>('/api/privacy', {
+
+        method: 'POST',
+
+        body: JSON.stringify(data),
+
+      });
+
+    } catch (error) {
+
+      console.warn('Server unavailable, returning mock privacy update');
+
+      return {
+
+        success: true,
+
+        message: 'Privacy settings saved (mock)'
 
       };
 

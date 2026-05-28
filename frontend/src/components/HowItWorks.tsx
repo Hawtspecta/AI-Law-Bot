@@ -66,22 +66,6 @@ const HowItWorks = ({ currentLanguage = 'en' }: HowItWorksProps) => {
 
       number: 2,
 
-      title: getTranslation('uploadDocuments', currentLanguage),
-
-      description: getTranslation('howItWorksStep2', currentLanguage) || '',
-
-      icon: Upload,
-
-      color: "text-green-500",
-
-      bgColor: "bg-green-500/10"
-
-    },
-
-    {
-
-      number: 3,
-
       title: getTranslation('aiAnalysis', currentLanguage),
 
       description: getTranslation('howItWorksStep3', currentLanguage) || '',
@@ -96,7 +80,7 @@ const HowItWorks = ({ currentLanguage = 'en' }: HowItWorksProps) => {
 
     {
 
-      number: 4,
+      number: 3,
 
       title: getTranslation('getResults', currentLanguage),
 
@@ -122,7 +106,7 @@ const HowItWorks = ({ currentLanguage = 'en' }: HowItWorksProps) => {
 
       title: getTranslation('trustedBy', currentLanguage),
 
-      description: '',
+      description: getTranslation('trustedByDesc', currentLanguage),
 
       color: "text-blue-500"
 
@@ -134,7 +118,7 @@ const HowItWorks = ({ currentLanguage = 'en' }: HowItWorksProps) => {
 
       title: getTranslation('privacySecurity', currentLanguage),
 
-      description: '',
+      description: getTranslation('privacySecurityDesc', currentLanguage),
 
       color: "text-green-500"
 
@@ -144,9 +128,9 @@ const HowItWorks = ({ currentLanguage = 'en' }: HowItWorksProps) => {
 
       icon: Clock,
 
-      title: '24/7',
+      title: '24/7 Guidance',
 
-      description: '',
+      description: getTranslation('supportDesc', currentLanguage),
 
       color: "text-purple-500"
 
@@ -158,7 +142,7 @@ const HowItWorks = ({ currentLanguage = 'en' }: HowItWorksProps) => {
 
       title: getTranslation('keyCitations', currentLanguage),
 
-      description: '',
+      description: getTranslation('keyCitationsDesc', currentLanguage),
 
       color: "text-orange-500"
 
@@ -194,7 +178,7 @@ const HowItWorks = ({ currentLanguage = 'en' }: HowItWorksProps) => {
 
         {/* Steps */}
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-20">
+        <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto mb-20">
 
           {steps.map((step, index) => (
 

@@ -28,14 +28,12 @@ const ToolNavigationSidebar = () => {
   const location = useLocation();
 
   return (
-    <aside className="lg:sticky lg:top-24 w-full rounded-xl border border-border/60 bg-card/80 p-4 shadow-sm">
-      <div className="mb-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">Tool Navigation</p>
-        <h2 className="mt-2 text-lg font-semibold text-foreground">Other tools</h2>
-        <p className="mt-1 text-sm text-muted-foreground">Browse the other legal workspace tools while you stay in the current page.</p>
+    <aside className="lg:sticky lg:top-24 w-64 rounded-xl border border-border/60 bg-card/80 p-3 shadow-sm">
+      <div className="mb-3">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">Tool Navigation</p>
       </div>
 
-      <nav className="space-y-2">
+      <nav className="space-y-1">
         {toolNavigation.map((item) => {
           const Icon = item.icon;
           const isActive = location.pathname === item.href;

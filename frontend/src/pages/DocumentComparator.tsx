@@ -210,9 +210,11 @@ const DocumentComparator = () => {
 
         <div className="grid lg:grid-cols-[260px_minmax(0,1fr)] gap-8 items-start">
 
-          <ToolNavigationSidebar />
+          <div className="hidden lg:block">
+            <ToolNavigationSidebar />
+          </div>
 
-          <div className="min-w-0">
+          <div className="min-w-0 w-full">
 
             <div className="max-w-6xl mx-auto">
 

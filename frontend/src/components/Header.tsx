@@ -14,12 +14,6 @@ import {
 
   Globe, 
 
-  User, 
-
-  LogIn, 
-
-  UserPlus, 
-
   Home, 
 
   MessageSquare, 
@@ -34,11 +28,11 @@ import {
 
 } from "lucide-react";
 
-import { apiClient } from "@/services/api";
-
 import { toast } from "sonner";
 
 import { getTranslation } from "@/lib/translations";
+
+import logoImage from "@/assets/logo.jpg";
 
 
 
@@ -56,151 +50,18 @@ const Header = ({ onLanguageChange, currentLanguage = 'en' }: HeaderProps) => {
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const [isLoginOpen, setIsLoginOpen] = useState(false);
-
-  const [isSignupOpen, setIsSignupOpen] = useState(false);
-
   const [isLanguageOpen, setIsLanguageOpen] = useState(false);
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-  
-
-  // Login/Signup form states
-
-  const [loginForm, setLoginForm] = useState({ email: '', password: '' });
-
-  const [signupForm, setSignupForm] = useState({ email: '', password: '', name: '' });
-
-  const [isLoading, setIsLoading] = useState(false);
-
-
-
   const languages = [
-
     { code: 'en', name: 'English', flag: '🇺🇸' },
-
-    { code: 'hi', name: 'हिन्दी', flag: '🇮🇳' },
-
-    { code: 'mr', name: 'मराठी', flag: '🇮🇳' },
-
-    { code: 'ta', name: 'தமிழ்', flag: '🇮🇳' },
-
-    { code: 'kn', name: 'ಕನ್ನಡ', flag: '🇮🇳' }
-
+    { code: 'hi', name: 'हिन्दी', flag: '🇮🇳' }
   ];
 
 
 
   const currentLang = languages.find(lang => lang.code === currentLanguage) || languages[0];
-
-
-
-  const handleLogin = async () => {
-
-    if (!loginForm.email || !loginForm.password) {
-
-      toast.error('Please fill in all fields');
-
-      return;
-
-    }
-
-
-
-    setIsLoading(true);
-
-    try {
-
-      const response = await apiClient.login(loginForm);
-
-      if (response.success) {
-
-        toast.success('Login successful!');
-
-        setIsLoginOpen(false);
-
-        setLoginForm({ email: '', password: '' });
-
-        // Store token and user data
-
-        localStorage.setItem('token', response.token || '');
-
-        localStorage.setItem('user', JSON.stringify(response.user));
-
-        // Don't refresh the page, just update the UI
-
-      } else {
-
-        toast.error(response.message || 'Login failed. Please try again.');
-
-      }
-
-    } catch (error) {
-
-      console.error('Login error:', error);
-
-      toast.error('Login failed. Please try again.');
-
-    } finally {
-
-      setIsLoading(false);
-
-    }
-
-  };
-
-
-
-  const handleSignup = async () => {
-
-    if (!signupForm.email || !signupForm.password || !signupForm.name) {
-
-      toast.error('Please fill in all fields');
-
-      return;
-
-    }
-
-
-
-    setIsLoading(true);
-
-    try {
-
-      const response = await apiClient.register(signupForm);
-
-      if (response.success) {
-
-        toast.success('Account created successfully!');
-
-        setIsSignupOpen(false);
-
-        setSignupForm({ email: '', password: '', name: '' });
-
-        // Don't refresh the page, just update the UI
-
-      } else {
-
-        toast.error(response.message || 'Registration failed. Please try again.');
-
-      }
-
-    } catch (error) {
-
-      console.error('Registration error:', error);
-
-      toast.error('Registration failed. Please try again.');
-
-    } finally {
-
-      setIsLoading(false);
-
-    }
-
-  };
-
-
 
   const handleLanguageChange = (language: string) => {
 
@@ -254,11 +115,15 @@ const Header = ({ onLanguageChange, currentLanguage = 'en' }: HeaderProps) => {
 
           <div className="flex items-center space-x-2">
 
-            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
+            <img
 
-              <span className="text-white font-bold text-sm">AI</span>
+              src={logoImage}
 
-            </div>
+              alt="AI Law Assistant logo"
+
+              className="h-8 w-8 rounded-lg object-cover"
+
+            />
 
             <span className="font-heading font-bold text-xl text-primary">Law Assistant</span>
 
@@ -308,7 +173,7 @@ const Header = ({ onLanguageChange, currentLanguage = 'en' }: HeaderProps) => {
 
               <FileText className="h-4 w-4 mr-1 inline" />
 
-              {getTranslation('documents', currentLanguage)}
+              Tools
 
             </button>
 
@@ -336,7 +201,7 @@ const Header = ({ onLanguageChange, currentLanguage = 'en' }: HeaderProps) => {
 
                 <Info className="h-4 w-4 mr-1 inline" />
 
-                {getTranslation('privacy', currentLanguage)}
+                Privacy
 
               </button>
 
@@ -405,50 +270,6 @@ const Header = ({ onLanguageChange, currentLanguage = 'en' }: HeaderProps) => {
               )}
 
             </div>
-
-
-
-            {/* Login Button (Feature #2) */}
-
-            <Button
-
-              variant="ghost"
-
-              size="sm"
-
-              onClick={() => setIsLoginOpen(true)}
-
-              className="flex items-center space-x-1"
-
-            >
-
-              <LogIn className="h-4 w-4" />
-
-              <span className="hidden sm:inline">{getTranslation('login', currentLanguage)}</span>
-
-            </Button>
-
-
-
-            {/* Sign Up Button (Feature #3) */}
-
-            <Button
-
-              size="sm"
-
-              onClick={() => setIsSignupOpen(true)}
-
-              className="flex items-center space-x-1"
-
-            >
-
-              <UserPlus className="h-4 w-4" />
-
-              <span className="hidden sm:inline">{getTranslation('signUp', currentLanguage)}</span>
-
-            </Button>
-
-
 
             {/* Mobile menu button */}
 
@@ -520,7 +341,7 @@ const Header = ({ onLanguageChange, currentLanguage = 'en' }: HeaderProps) => {
 
                 <FileText className="h-4 w-4 mr-2 inline" />
 
-                {getTranslation('documents', currentLanguage)}
+                Tools
 
               </button>
 
@@ -548,7 +369,7 @@ const Header = ({ onLanguageChange, currentLanguage = 'en' }: HeaderProps) => {
 
                 <Info className="h-4 w-4 mr-2 inline" />
 
-                {getTranslation('privacy', currentLanguage)}
+                Privacy
 
               </button>
 
@@ -559,146 +380,6 @@ const Header = ({ onLanguageChange, currentLanguage = 'en' }: HeaderProps) => {
         )}
 
       </div>
-
-
-
-      {/* Login Modal */}
-
-      {isLoginOpen && (
-
-        <div className="fixed inset-0 z-50 flex items-center justify-center min-h-screen bg-black/50 overflow-y-auto p-4">
-
-          <div className="absolute inset-0 z-0" onClick={() => setIsLoginOpen(false)}></div>
-
-          <Card className="w-full max-w-md max-h-[90vh] overflow-y-auto p-6 relative z-10 mx-auto">
-
-            <div className="flex items-center justify-between mb-4">
-
-              <h2 className="text-xl font-semibold">{getTranslation('login', currentLanguage)}</h2>
-
-              <Button variant="ghost" size="sm" onClick={() => setIsLoginOpen(false)}>
-
-                <X className="h-4 w-4" />
-
-              </Button>
-
-            </div>
-
-            <div className="space-y-4">
-
-              <Input
-
-                type="email"
-
-                placeholder="Email"
-
-                value={loginForm.email}
-
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLoginForm({ ...loginForm, email: e.target.value })}
-
-              />
-
-              <Input
-
-                type="password"
-
-                placeholder="Password"
-
-                value={loginForm.password}
-
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLoginForm({ ...loginForm, password: e.target.value })}
-
-              />
-
-              <Button onClick={handleLogin} disabled={isLoading} className="w-full">
-
-                {isLoading ? 'Logging in...' : getTranslation('login', currentLanguage)}
-
-              </Button>
-
-            </div>
-
-          </Card>
-
-        </div>
-
-      )}
-
-
-
-      {/* Signup Modal */}
-
-      {isSignupOpen && (
-
-        <div className="fixed inset-0 z-50 flex items-center justify-center min-h-screen bg-black/50 overflow-y-auto p-4">
-
-          <div className="absolute inset-0 z-0" onClick={() => setIsSignupOpen(false)}></div>
-
-          <Card className="w-full max-w-md max-h-[90vh] overflow-y-auto p-6 relative z-10 mx-auto">
-
-            <div className="flex items-center justify-between mb-4">
-
-              <h2 className="text-xl font-semibold">{getTranslation('signUp', currentLanguage)}</h2>
-
-              <Button variant="ghost" size="sm" onClick={() => setIsSignupOpen(false)}>
-
-                <X className="h-4 w-4" />
-
-              </Button>
-
-            </div>
-
-            <div className="space-y-4">
-
-              <Input
-
-                type="text"
-
-                placeholder="Full Name"
-
-                value={signupForm.name}
-
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSignupForm({ ...signupForm, name: e.target.value })}
-
-              />
-
-              <Input
-
-                type="email"
-
-                placeholder="Email"
-
-                value={signupForm.email}
-
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSignupForm({ ...signupForm, email: e.target.value })}
-
-              />
-
-              <Input
-
-                type="password"
-
-                placeholder="Password"
-
-                value={signupForm.password}
-
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSignupForm({ ...signupForm, password: e.target.value })}
-
-              />
-
-              <Button onClick={handleSignup} disabled={isLoading} className="w-full">
-
-                {isLoading ? 'Creating Account...' : getTranslation('signUp', currentLanguage)}
-
-              </Button>
-
-            </div>
-
-          </Card>
-
-        </div>
-
-      )}
 
     </header>
 

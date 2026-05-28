@@ -2,7 +2,7 @@
 
 
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
 
@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 
 import { Card } from "@/components/ui/card";
 
-import { Send, Mic, Bot, User, Upload, Download, Loader2, X, FileText } from "lucide-react";
+import { Send, Mic, Bot, User, Download, Loader2 } from "lucide-react";
 
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -20,7 +20,30 @@ import { toast } from "sonner";
 
 import { getTranslation } from "@/lib/translations";
 
+const escapeHtml = (value: string) => value
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#039;');
 
+const renderRichText = (value: string) => {
+  // If the content already contains HTML tags (e.g. <h2>, <p>, <ul>, etc.), return it with newlines converted to <br/>.
+  const hasHtml = /<\/?[a-z][\s\S]*>/i.test(value);
+  if (hasHtml) {
+    return value.replace(/\n/g, '<br/>');
+  }
+
+  const escaped = escapeHtml(value);
+  // Remove preformatting patterns like === and ---
+  const cleaned = escaped.replace(/={3,}/g, '').replace(/-{3,}/g, '');
+  const boldFormatted = cleaned.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+  return boldFormatted
+    .split(/\n\s*\n/)
+    .map((paragraph) => `<p class="mb-2 last:mb-0">${paragraph.replace(/\n/g, '<br/>')}</p>`)
+    .join('');
+};
 
 interface ChatInterfaceProps {
 
@@ -33,15 +56,11 @@ interface ChatInterfaceProps {
 const ChatInterface = ({ currentLanguage = 'en' }: ChatInterfaceProps) => {
 
   const [messages, setMessages] = useState<Message[]>([
-
     {
-
       role: "assistant",
-
-      content: getTranslation('chatGreeting', currentLanguage),
-
-    },
-
+      content: "Hi, how can I assist you today?",
+      citations: []
+    }
   ]);
 
   const [input, setInput] = useState("");
@@ -50,11 +69,11 @@ const ChatInterface = ({ currentLanguage = 'en' }: ChatInterfaceProps) => {
 
   const [isRecording, setIsRecording] = useState(false);
 
-  const [uploadedDocuments, setUploadedDocuments] = useState<Array<{id: string, name: string, type: string}>>([]);
-
   const [sessionId] = useState(() => localStorage.getItem('currentSessionId') || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
 
+  const [anonymizeQueries, setAnonymizeQueries] = useState(() => localStorage.getItem('anonymizeQueries') === 'true');
 
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const examplePrompts = [
 
@@ -68,7 +87,11 @@ const ChatInterface = ({ currentLanguage = 'en' }: ChatInterfaceProps) => {
 
   ];
 
-
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
 
   const handleSend = async () => {
 
@@ -99,6 +122,8 @@ const ChatInterface = ({ currentLanguage = 'en' }: ChatInterfaceProps) => {
         userId: "anonymous",
 
         language: currentLanguage,
+
+        anonymize: anonymizeQueries,
 
       });
 
@@ -318,27 +343,7 @@ const ChatInterface = ({ currentLanguage = 'en' }: ChatInterfaceProps) => {
 
           console.log("✅ Backend response received:", response);
 
-          
-
-          // Add document to uploaded documents list
-
-          const newDoc = {
-
-            id: response.id,
-
-            name: file.name,
-
-            type: file.type
-
-          };
-
-          setUploadedDocuments(prev => [...prev, newDoc]);
-
-          
-
           toast.success("Document analyzed successfully!");
-
-          
 
           // Add AI analysis to chat messages
 
@@ -354,7 +359,7 @@ const ChatInterface = ({ currentLanguage = 'en' }: ChatInterfaceProps) => {
 
           setMessages(prev => [...prev, analysisMessage]);
 
-          
+
 
         } catch (error: any) {
 
@@ -369,16 +374,6 @@ const ChatInterface = ({ currentLanguage = 'en' }: ChatInterfaceProps) => {
     };
 
     inputFile.click();
-
-  };
-
-
-
-  const handleRemoveDocument = (docId: string) => {
-
-    setUploadedDocuments(prev => prev.filter(doc => doc.id !== docId));
-
-    toast.success("Document removed");
 
   };
 
@@ -438,68 +433,6 @@ const ChatInterface = ({ currentLanguage = 'en' }: ChatInterfaceProps) => {
 
             </div>
 
-            
-
-            {/* Uploaded Documents Display */}
-
-            {uploadedDocuments.length > 0 && (
-
-              <div className="mt-6 pt-6 border-t border-border">
-
-                <h4 className="text-sm font-medium text-primary mb-3">Uploaded Documents:</h4>
-
-                <div className="space-y-2">
-
-                  {uploadedDocuments.map((doc) => (
-
-                    <div key={doc.id} className="flex items-center justify-between p-2 bg-secondary rounded-lg">
-
-                      <div className="flex items-center space-x-2">
-
-                        <FileText className="h-4 w-4 text-muted-foreground" />
-
-                        <span className="text-sm text-muted-foreground truncate max-w-[150px]">{doc.name}</span>
-
-                      </div>
-
-                      <Button
-
-                        variant="ghost"
-
-                        size="sm"
-
-                        onClick={() => handleRemoveDocument(doc.id)}
-
-                        className="h-6 w-6 p-0 hover:bg-red-100"
-
-                      >
-
-                        <X className="h-3 w-3 text-red-500" />
-
-                      </Button>
-
-                    </div>
-
-                  ))}
-
-                </div>
-
-              </div>
-
-            )}
-
-            
-
-            <div className="mt-6 pt-6 border-t border-border">
-
-              <Button variant="outline" className="w-full" size="sm" onClick={handleUploadDocument}>
-
-                <Upload className="mr-2 h-4 w-4" /> {getTranslation('uploadDocument', currentLanguage)}
-
-              </Button>
-
-            </div>
-
           </Card>
 
 
@@ -510,7 +443,7 @@ const ChatInterface = ({ currentLanguage = 'en' }: ChatInterfaceProps) => {
 
             <ScrollArea className="h-[500px] pr-4 mb-4">
 
-              <div className="space-y-4">
+              <div ref={scrollRef} className="space-y-4">
 
                 {messages.map((message, idx) => (
 
@@ -542,11 +475,10 @@ const ChatInterface = ({ currentLanguage = 'en' }: ChatInterfaceProps) => {
 
                       >
 
-                        {/* ✅ FIXED: Use whitespace-pre-wrap to preserve line breaks */}
-
-                        <div className="text-sm whitespace-pre-wrap">{message.content}</div>
-
-                        
+                        <div
+                          className="text-sm"
+                          dangerouslySetInnerHTML={{ __html: message.role === 'assistant' ? renderRichText(message.content) : escapeHtml(message.content).replace(/\n/g, '<br/>') }}
+                        />
 
                         {message.citations && message.citations.length > 0 && (
 

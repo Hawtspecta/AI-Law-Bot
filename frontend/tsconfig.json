@@ -1,56 +1,7 @@
 {
-  "compilerOptions": {
-    /* Language and Environment */
-    "target": "ES2020",
-    "lib": ["ES2020"],
-    "module": "commonjs",
-    "moduleResolution": "node",
-
-    /* Interop Constraints */
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-
-    /* Type Checking */
-    "strict": true,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "strictFunctionTypes": true,
-    "strictPropertyInitialization": false,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-
-    /* Emit */
-    "outDir": "./dist",
-    "rootDir": "./",
-    "removeComments": true,
-    "sourceMap": true,
-    "declaration": false,
-
-    /* Skip Type Checking */
-    "skipLibCheck": true,
-
-    /* Advanced Options */
-    "types": ["node"],
-    "allowJs": true
-  },
-  "include": [
-    "**/*.ts",
-    "backend/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "frontend"
-  ],
-  "ts-node": {
-    "transpileOnly": true,
-    "files": true,
-    "compilerOptions": {
-      "module": "commonjs"
-    }
-  }
+  "files": [],
+  "references": [
+    { "path": "./tsconfig.app.json" },
+    { "path": "./tsconfig.node.json" }
+  ]
 }

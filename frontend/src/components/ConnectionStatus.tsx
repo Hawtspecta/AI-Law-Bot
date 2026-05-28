@@ -54,7 +54,7 @@ const ConnectionStatus = ({ onRetry }: ConnectionStatusProps) => {
 
       const response = await apiClient.healthCheck();
 
-      if (response.status === 'OK' || response.status === 'MOCK') {
+      if (response.status === 'OK' || response.status === 'ok' || response.status === 'MOCK') {
 
         setStatus('connected');
 

@@ -60,11 +60,9 @@ const PrivacySettings = () => {
 
     try {
 
-      // In a real app, this would load from user profile
-
-      // For now, we'll use default values
-
-      setAnonymizeQueries(false);
+      // Load from localStorage
+      const savedAnonymize = localStorage.getItem('anonymizeQueries');
+      setAnonymizeQueries(savedAnonymize === 'true');
 
       setDataRetentionDays(30);
 
@@ -127,6 +125,8 @@ const PrivacySettings = () => {
   const handleAnonymizeToggle = (checked: boolean) => {
 
     setAnonymizeQueries(checked);
+
+    localStorage.setItem('anonymizeQueries', checked.toString());
 
     if (checked) {
 

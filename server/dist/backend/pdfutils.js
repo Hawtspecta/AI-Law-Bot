@@ -5,18 +5,14 @@ exports.extractPdfText = extractPdfText;
 async function extractPdfText(base64Content) {
     try {
         // Dynamic import for pdf-parse
-        const pdfParseModule = require('pdf-parse');
-        const PDFParse = pdfParseModule.PDFParse;
-        // Convert base64 to buffer and then to Uint8Array
+        const pdfParse = require('pdf-parse');
+        // Convert base64 to buffer
         const pdfBuffer = Buffer.from(base64Content, 'base64');
-        const uint8Array = new Uint8Array(pdfBuffer.buffer, pdfBuffer.byteOffset, pdfBuffer.length);
         console.log(`📄 PDF Buffer created: ${pdfBuffer.length} bytes`);
-        // Parse PDF correctly using class instantiation + load() + getText()
-        const pdfData = new PDFParse(uint8Array);
-        await pdfData.load();
-        const parsedResult = await pdfData.getText();
-        console.log(`✅ PDF parsed: ${parsedResult.total || 1} pages, ${parsedResult.text.length} characters`);
-        return parsedResult.text;
+        // Parse PDF correctly by calling the pdf-parse function directly
+        const data = await pdfParse(pdfBuffer);
+        console.log(`✅ PDF parsed: ${data.numpages || 1} pages, ${data.text.length} characters`);
+        return data.text;
     }
     catch (error) {
         console.error('❌ PDF parsing error:', error);
