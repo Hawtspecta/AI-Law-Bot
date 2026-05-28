@@ -4,8 +4,8 @@
   "description": "AI-powered legal assistant with RAG system",
   "main": "server.js",
   "scripts": {
-    "dev": "cd backend && npm run dev",
-    "start": "cd backend && npm start",
+    "dev": "cd server && npm run dev",
+    "start": "cd server && npm run dev",
     "build": "tsc",
     "embed": "node scripts/embed.js",
     "test": "node test-server.js",

@@ -3,6 +3,12 @@ const path = require('path');
 require('dotenv').config();
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const Groq = require('groq-sdk');
+let groqClient = null;
+if (GROQ_API_KEY) {
+  groqClient = new Groq({ apiKey: GROQ_API_KEY });
+}
 
 
 // Simple in-memory vector store (in production, use ChromaDB or FAISS)
@@ -100,6 +106,99 @@ async function getEmbedding(text) {
       return generateSimpleEmbedding(text);
     }
 
+    // Prefer OpenAI embeddings if OPENAI_API_KEY is provided
+    if (OPENAI_API_KEY) {
+      // Retry with exponential backoff for rate limits
+      let attempts = 0;
+      while (attempts < 3) {
+        const response = await fetch('https://api.openai.com/v1/embeddings', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${OPENAI_API_KEY}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ model: 'text-embedding-3-small', input: text })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data?.data && data.data[0]?.embedding) return data.data[0].embedding;
+          if (data?.embedding) return data.embedding;
+          throw new Error('OpenAI: unexpected embedding response');
+        }
+
+        if (response.status === 429) {
+          const wait = Math.pow(2, attempts) * 1000;
+          attempts += 1;
+          console.warn(`⚠️ OpenAI rate-limited, retrying after ${wait}ms (attempt ${attempts})`);
+          await new Promise(r => setTimeout(r, wait));
+          continue;
+        }
+
+        throw new Error(`OpenAI API error: ${response.statusText}`);
+      }
+
+      console.warn('⚠️ OpenAI embeddings rate-limited repeatedly; using local fallback embedding');
+      return generateSimpleEmbedding(text);
+    }
+
+    if (groqClient) {
+      console.log('🔍 groqClient properties:', Object.keys(groqClient));
+      console.log('🔍 groqClient.baseURL:', groqClient.baseURL);
+      // Try multiple possible client shapes to support SDK variations
+      let embRes = null;
+
+      // 1) Common pattern: groqClient.embeddings.create
+      if (groqClient.embeddings && typeof groqClient.embeddings.create === 'function') {
+        embRes = await groqClient.embeddings.create({ model: 'text-embedding-3-small', input: text });
+      }
+
+      // 2) Alternative: groqClient.openai.embeddings.create
+      else if (groqClient.openai && groqClient.openai.embeddings && typeof groqClient.openai.embeddings.create === 'function') {
+        embRes = await groqClient.openai.embeddings.create({ model: 'text-embedding-3-small', input: text });
+      }
+
+      // 3) Another possible shape: groqClient.embeddingsCreate
+      else if (typeof groqClient.embeddingsCreate === 'function') {
+        embRes = await groqClient.embeddingsCreate({ model: 'text-embedding-3-small', input: text });
+      }
+
+      if (embRes) {
+        if (embRes?.data && embRes.data[0]?.embedding) return embRes.data[0].embedding;
+        if (embRes?.embedding) return embRes.embedding;
+      }
+
+      // 4) Fallback: use the client's fetch helper to call OpenAI-compatible embeddings path
+      if (typeof groqClient.fetch === 'function') {
+        const base = groqClient.baseURL ? groqClient.baseURL.replace(/\/$/, '') : 'https://api.groq.com';
+        const paths = ['/openai/v1/embeddings', '/v1/embeddings', '/embeddings'];
+
+        for (const p of paths) {
+          const url = `${base}${p}`;
+          const resp = await groqClient.fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_API_KEY}` },
+            body: JSON.stringify({ model: 'text-embedding-3-small', input: text })
+          });
+
+          if (!resp.ok) {
+            // Try next candidate for 404; otherwise surface error
+            if (resp.status === 404) continue;
+            const textErr = resp.statusText || `status ${resp.status}`;
+            throw new Error(`Groq API error: ${textErr}`);
+          }
+
+          const data = await resp.json();
+          return data.data[0].embedding;
+        }
+      }
+
+      // If none of the client shapes worked, fallback to simple local embedding
+      console.warn('⚠️  Groq embeddings endpoint not available or not found for this API key; using local fallback embeddings');
+      return generateSimpleEmbedding(text);
+    }
+
+    // Fallback to fetch call (legacy) if groqClient is not available
     const response = await fetch("https://api.groq.com/openai/v1/embeddings", {
       method: "POST",
       headers: {
