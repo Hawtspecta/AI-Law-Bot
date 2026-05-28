@@ -72,7 +72,8 @@ app.use((0, cors_1.default)({
         "http://localhost:3000",
         "http://127.0.0.1:8080",
         "http://localhost:5173", // Vite default port
-        "http://127.0.0.1:5173"
+        "http://127.0.0.1:5173",
+        "https://ai-law-h9u0jmnfx-sahanas-projects-3a66279f.vercel.app/"
     ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
