@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://ai-law-bot-7ko7.onrender.com';
 
 const HEALTH_CHECK_URL = `${API_BASE_URL}/health`;
 
