@@ -123,37 +123,21 @@ const DocumentComparator = () => {
 
 
   const getImpactColor = (impact: string) => {
-
-    switch (impact.toLowerCase()) {
-
+    switch ((impact || 'medium').toLowerCase()) {
       case 'high': return 'text-red-600 bg-red-50 border-red-200';
-
       case 'medium': return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-
       case 'low': return 'text-green-600 bg-green-50 border-green-200';
-
       default: return 'text-gray-600 bg-gray-50 border-gray-200';
-
     }
-
   };
 
-
-
   const getImpactIcon = (impact: string) => {
-
-    switch (impact.toLowerCase()) {
-
+    switch ((impact || 'medium').toLowerCase()) {
       case 'high': return <AlertTriangle className="h-4 w-4" />;
-
       case 'medium': return <AlertTriangle className="h-4 w-4" />;
-
       case 'low': return <CheckCircle className="h-4 w-4" />;
-
       default: return <Info className="h-4 w-4" />;
-
     }
-
   };
 
 
@@ -393,23 +377,28 @@ const DocumentComparator = () => {
                   <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Key Differences Identified</h4>
                   <div className="space-y-4">
                     {results.comparison.differences.map((difference: any, index: number) => {
-                      // Intelligent frontend sanitization to complete truncated warning headers
-                      let sectionTitle = difference.section || 'Clause / Provision';
+                      if (!difference) return null;
                       
+                      // Safeguard against missing or undefined properties
+                      let sectionTitle = String(difference.section || 'Clause / Provision');
+                      const impact = String(difference.impact || 'medium');
+                      const doc1 = String(difference.document1 || 'Refer to original document provisions.');
+                      const doc2 = String(difference.document2 || 'Refer to updated document provisions.');
+                      const recommendation = String(difference.recommendation || 'Review changes carefully.');
+
                       if (sectionTitle.endsWith('...')) {
                         const cleanPrefix = sectionTitle.replace(/\.{3,}$/, '').trim();
-                        const fullRec = difference.recommendation || '';
-                        const fullDesc = difference.document2 || '';
                         
                         let completedText = '';
                         
-                        // Helper to extract sentences
+                        // Helper to extract sentences without legacy lookbehind regex
                         const getSentences = (text: string) => {
-                          return text.split(/(?<=[.!?])\s+/).map(s => s.trim()).filter(Boolean);
+                          if (typeof text !== 'string') return [];
+                          return text.replace(/([.!?])\s+/g, "$1|").split("|").map(s => s.trim()).filter(Boolean);
                         };
                         
-                        const recSentences = getSentences(fullRec);
-                        const descSentences = getSentences(fullDesc);
+                        const recSentences = getSentences(recommendation);
+                        const descSentences = getSentences(doc2);
                         const allSentences = [...recSentences, ...descSentences];
                         
                         // 1. Try exact start matching (case-insensitive)
@@ -454,30 +443,37 @@ const DocumentComparator = () => {
                       }
 
                       return (
-                        <div key={index} className={`p-4 rounded-xl border ${getImpactColor(difference.impact)} shadow-xs`}>
+                        <div key={index} className={`p-4 rounded-xl border ${getImpactColor(impact)} shadow-xs`}>
                           <div className="flex items-center justify-between space-x-4 mb-3 font-medium">
                             <div className="flex items-center space-x-2 min-w-0 flex-1">
-                              {getImpactIcon(difference.impact)}
+                              {getImpactIcon(impact)}
                               <span className="text-sm font-semibold">{sectionTitle}</span>
                             </div>
                             <span className="text-xs px-2 py-0.5 rounded bg-background/50 border border-border/10 flex-shrink-0">
-                              {difference.impact} Impact
+                              {impact} Impact
                             </span>
                           </div>
                           
-                          <div className="grid md:grid-cols-2 gap-4 mb-3">
-                            <div>
-                              <h5 className="text-xs font-semibold mb-1 text-muted-foreground">Document 1 (Original):</h5>
-                              <p className="text-xs bg-background/60 p-2.5 rounded border border-border/20 leading-relaxed">{difference.document1}</p>
+                          {doc1 === "Refer to original document provisions." || doc1 === "Original" || doc1 === "Original version" || doc1 === "Original terms" ? (
+                            <div className="mb-3">
+                              <h5 className="text-xs font-semibold mb-1 text-muted-foreground">Description of Change:</h5>
+                              <p className="text-xs bg-background/60 p-2.5 rounded border border-border/20 leading-relaxed">{doc2}</p>
                             </div>
-                            <div>
-                              <h5 className="text-xs font-semibold mb-1 text-muted-foreground">Document 2 (Updated):</h5>
-                              <p className="text-xs bg-background/60 p-2.5 rounded border border-border/20 leading-relaxed">{difference.document2}</p>
+                          ) : (
+                            <div className="grid md:grid-cols-2 gap-4 mb-3">
+                              <div>
+                                <h5 className="text-xs font-semibold mb-1 text-muted-foreground">Document 1 (Original):</h5>
+                                <p className="text-xs bg-background/60 p-2.5 rounded border border-border/20 leading-relaxed">{doc1}</p>
+                              </div>
+                              <div>
+                                <h5 className="text-xs font-semibold mb-1 text-muted-foreground">Document 2 (Updated):</h5>
+                                <p className="text-xs bg-background/60 p-2.5 rounded border border-border/20 leading-relaxed">{doc2}</p>
+                              </div>
                             </div>
-                          </div>
+                          )}
                           
                           <div className="text-xs border-t border-border/10 pt-2 mt-2">
-                            <strong>Recommendation:</strong> <span className="opacity-90">{difference.recommendation}</span>
+                            <strong>Recommendation:</strong> <span className="opacity-90">{recommendation}</span>
                           </div>
                         </div>
                       );

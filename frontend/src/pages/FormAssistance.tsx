@@ -511,15 +511,19 @@ const FormAssistance = () => {
                       ) : (
 
                         <Input
-
                           type={field.type === 'email' ? 'email' : field.type === 'date' ? 'date' : 'text'}
-
                           value={String(userInputs[field.key] || '')}
-
                           onChange={(e) => setUserInputs({...userInputs, [field.key]: e.target.value})}
-
+                          onClick={(e) => {
+                            if (field.type === 'date') {
+                              try {
+                                e.currentTarget.showPicker();
+                              } catch (err) {
+                                console.warn("Native showPicker not supported:", err);
+                              }
+                            }
+                          }}
                           placeholder={`Enter ${field.label.toLowerCase()}`}
-
                         />
 
                       )}

@@ -229,4 +229,16 @@ All colors MUST be HSL.
       cursor: none !important;
     }
   }
+
+  /* Style Webkit calendar picker indicator with high contrast in dark mode */
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  input[type="date"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 0.8;
+  }
+  .dark input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1); /* High contrast white icon in dark mode */
+  }
 }
