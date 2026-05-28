@@ -723,11 +723,17 @@ const FormAssistance = () => {
                 </div>
               )}
 
-              {/* Completed Form */}
               <div className="space-y-2">
                 <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Drafted Form Preview</h4>
                 <div className="prose max-w-none text-sm text-foreground leading-relaxed bg-secondary/30 p-4 rounded-xl border border-border/30 whitespace-pre-wrap">
-                  <div dangerouslySetInnerHTML={{ __html: results.filledForm.completedForm.replace(/\n/g, '<br/>') }} />
+                  <div dangerouslySetInnerHTML={{ 
+                    __html: results.filledForm.completedForm
+                      .replace(/\s*\[?Visual Separator\]?\s*/gi, '<hr class="my-4 border-border/40" />')
+                      .replace(/---\s*Visual Separator\s*---/gi, '<hr class="my-4 border-border/40" />')
+                      .replace(/-{3,}/g, '<hr class="my-4 border-border/40" />')
+                      .replace(/={3,}/g, '<hr class="my-4 border-double border-primary/20" />')
+                      .replace(/\n/g, '<br/>') 
+                  }} />
                 </div>
               </div>
 
