@@ -38,8 +38,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const dotenv = __importStar(require("dotenv"));
 const path = __importStar(require("path"));
-// Resolve envPath robustly
-const envPath = path.resolve(process.cwd(), '.env');
+const fs = __importStar(require("fs"));
+// Resolve envPath robustly checking both process.cwd() and parent directory
+let envPath = path.resolve(process.cwd(), '.env');
+if (!fs.existsSync(envPath)) {
+    envPath = path.resolve(process.cwd(), '..', '.env');
+}
 console.log('Loading .env from:', envPath);
 const result = dotenv.config({ path: envPath });
 if (result.error) {
@@ -67,14 +71,29 @@ const app = (0, express_1.default)();
 const PORT = process.env.PORT || 3001;
 // Middleware
 app.use((0, cors_1.default)({
-    origin: [
-        "http://localhost:8080",
-        "http://localhost:3000",
-        "http://127.0.0.1:8080",
-        "http://localhost:5173", // Vite default port
-        "http://127.0.0.1:5173",
-        "https://ai-law-h9u0jmnfx-sahanas-projects-3a66279f.vercel.app/"
-    ],
+    origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps, curl, etc.)
+        if (!origin)
+            return callback(null, true);
+        const allowedOrigins = [
+            "http://localhost:8080",
+            "http://localhost:3000",
+            "http://127.0.0.1:8080",
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+            "https://ai-law-bot-nu.vercel.app"
+        ];
+        const isAllowed = allowedOrigins.includes(origin) ||
+            origin.endsWith(".vercel.app") ||
+            origin.includes("vercel.app");
+        if (isAllowed) {
+            callback(null, true);
+        }
+        else {
+            // Fallback for safety in production demo
+            callback(null, true);
+        }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']

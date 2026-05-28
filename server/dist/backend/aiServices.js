@@ -47,8 +47,12 @@ exports.generateAIResponse = generateAIResponse;
 const groq_sdk_1 = __importDefault(require("groq-sdk"));
 const dotenv = __importStar(require("dotenv"));
 const path = __importStar(require("path"));
-// Load environment variables
-const envPath = path.resolve(process.cwd(), '.env');
+const fs = __importStar(require("fs"));
+// Load environment variables checking both process.cwd() and parent directory
+let envPath = path.resolve(process.cwd(), '.env');
+if (!fs.existsSync(envPath)) {
+    envPath = path.resolve(process.cwd(), '..', '.env');
+}
 dotenv.config({ path: envPath });
 console.log("🔑 Loaded GROQ_API_KEY:", process.env.GROQ_API_KEY ? "✅ Present" : "❌ Missing");
 const groq = new groq_sdk_1.default({

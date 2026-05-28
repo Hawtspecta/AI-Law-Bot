@@ -126,7 +126,7 @@ const LegalResearch = ({ currentLanguage = 'en' }) => {
                 className="flex items-center space-x-2"
               >
                 <ArrowLeft className="h-4 w-4" />
-                <span>{getTranslation('backToHome', currentLanguage)}</span>
+                <span>{getTranslation('Back To Home', currentLanguage)}</span>
               </Button>
               <div className="flex items-center space-x-2">
                 <Search className="h-6 w-6 text-primary" />

@@ -2,8 +2,13 @@ import Groq from "groq-sdk";
 import * as dotenv from 'dotenv';
 import * as path from 'path';
 
-// Load environment variables
-const envPath = path.resolve(process.cwd(), '.env');
+import * as fs from 'fs';
+
+// Load environment variables checking both process.cwd() and parent directory
+let envPath = path.resolve(process.cwd(), '.env');
+if (!fs.existsSync(envPath)) {
+  envPath = path.resolve(process.cwd(), '..', '.env');
+}
 dotenv.config({ path: envPath });
 
 console.log("🔑 Loaded GROQ_API_KEY:", process.env.GROQ_API_KEY ? "✅ Present" : "❌ Missing");

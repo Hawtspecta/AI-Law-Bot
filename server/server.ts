@@ -1,8 +1,13 @@
 import * as dotenv from 'dotenv';
 import * as path from 'path';
 
-// Resolve envPath robustly
-const envPath = path.resolve(process.cwd(), '.env');
+import * as fs from 'fs';
+
+// Resolve envPath robustly checking both process.cwd() and parent directory
+let envPath = path.resolve(process.cwd(), '.env');
+if (!fs.existsSync(envPath)) {
+  envPath = path.resolve(process.cwd(), '..', '.env');
+}
 console.log('Loading .env from:', envPath);
 
 const result = dotenv.config({ path: envPath });
