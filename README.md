@@ -15,7 +15,7 @@ A comprehensive, production-grade AI-powered legal assistant built with a native
 - **Semantic Legal Search**: Vector search-backed indexing to query legal contexts, with customizable categories and jurisdictions.
 
 ### Technical Capabilities
-- **Robust Multi-Language System**: Full localization switching dynamically across English, Hindi (हिंदी), Marathi (मराठी), Tamil (தமிழ்), and Kannada (ಕನ್ನಡ) for all page text, guidelines, and components.
+- **Robust Multi-Language System**: Full localization switching dynamically across English and Hindi (हिंदी)for all page text, guidelines, and components.
 - **Fast Local Vector Store**: Efficient in-memory vector storage containing pre-embedded Indian statutory regulations, case laws, and guidelines.
 - **Self-Healing LLM Backends**: Fail-safe mechanisms routing requests to Groq (Llama 3.3/3.1) with prompt fallback structures designed to ensure robust, valid legal information.
 - **Privacy & Security Control**: User-controlled session data lifespan and toggleable local storage query anonymization settings.
