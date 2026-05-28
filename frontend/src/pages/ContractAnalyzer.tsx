@@ -24,7 +24,9 @@ import {
 
   Shield,
 
-  AlertCircle
+  AlertCircle,
+
+  Bot
 
 } from "lucide-react";
 
@@ -343,239 +345,113 @@ const ContractAnalyzer = () => {
 
 
           {results && !isLoading && (
-
-            <div className="space-y-6">
+            <div className="w-full bg-card border border-border/60 border-l-4 border-l-accent rounded-2xl rounded-tl-none shadow-sm p-6 space-y-6 text-left animate-scale-in">
+              {/* Header */}
+              <div className="border-b border-border/30 pb-3">
+                <div className="flex items-center space-x-2">
+                  <FileText className="h-5 w-5 text-accent" />
+                  <h3 className="text-lg font-heading font-semibold text-primary">Contract Analysis Report</h3>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">Completed at {new Date(results.timestamp).toLocaleTimeString()}</p>
+              </div>
 
               {/* Summary */}
-
-              <Card className="p-6">
-
-                <div className="flex items-center space-x-2 mb-4">
-
-                  <Info className="h-5 w-5 text-primary" />
-
-                  <h3 className="text-lg font-semibold">Analysis Summary</h3>
-
-                </div>
-
-                <div className="prose max-w-none">
-
+              <div className="space-y-2">
+                <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Analysis Summary</h4>
+                <div className="prose max-w-none text-sm text-foreground leading-relaxed bg-secondary/30 p-4 rounded-xl border border-border/30">
                   <div dangerouslySetInnerHTML={{ __html: results.analysis.summary.replace(/\n/g, '<br/>') }} />
-
                 </div>
-
-              </Card>
-
-
+              </div>
 
               {/* Key Clauses */}
-
               {results.analysis.keyClauses && results.analysis.keyClauses.length > 0 && (
-
-                <Card className="p-6">
-
-                  <div className="flex items-center space-x-2 mb-4">
-
-                    <FileText className="h-5 w-5 text-blue-500" />
-
-                    <h3 className="text-lg font-semibold">Key Clauses</h3>
-
-                  </div>
-
-                  <div className="space-y-2">
-
+                <div className="space-y-2">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Key Clauses Extracted</h4>
+                  <div className="space-y-2 bg-secondary/15 p-4 rounded-xl border border-border/30">
                     {results.analysis.keyClauses.map((clause: string, index: number) => (
-
                       <div key={index} className="flex items-start space-x-2">
-
-                        <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-
-                        <span className="text-sm">{clause}</span>
-
+                        <CheckCircle className="h-4 w-4 text-accent mt-0.5 flex-shrink-0" />
+                        <span className="text-sm text-foreground/90">{clause}</span>
                       </div>
-
                     ))}
-
                   </div>
-
-                </Card>
-
+                </div>
               )}
-
-
 
               {/* Risk Assessment */}
-
               {results.analysis.risks && results.analysis.risks.length > 0 && (
-
-                <Card className="p-6">
-
-                  <div className="flex items-center space-x-2 mb-4">
-
-                    <AlertTriangle className="h-5 w-5 text-red-500" />
-
-                    <h3 className="text-lg font-semibold">Risk Assessment</h3>
-
-                  </div>
-
+                <div className="space-y-2">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Risk Assessment</h4>
                   <div className="space-y-3">
-
                     {results.analysis.risks.map((risk: any, index: number) => (
-
-                      <div key={index} className={`p-4 rounded-lg border ${getRiskColor(risk.level)}`}>
-
-                        <div className="flex items-center space-x-2 mb-2">
-
+                      <div key={index} className={`p-4 rounded-xl border ${getRiskColor(risk.level)} shadow-xs`}>
+                        <div className="flex items-center space-x-2 mb-2 font-medium">
                           {getRiskIcon(risk.level)}
-
-                          <span className="font-medium">{risk.level} Risk</span>
-
+                          <span className="text-sm">{risk.level} Risk</span>
                         </div>
-
-                        <p className="text-sm mb-2">{risk.description}</p>
-
-                        <p className="text-xs text-muted-foreground">
-
+                        <p className="text-sm mb-2 opacity-95">{risk.description}</p>
+                        <p className="text-xs opacity-80">
                           <strong>Recommendation:</strong> {risk.recommendation}
-
                         </p>
-
                       </div>
-
                     ))}
-
                   </div>
-
-                </Card>
-
+                </div>
               )}
-
-
 
               {/* Compliance Issues */}
-
               {results.analysis.complianceIssues && results.analysis.complianceIssues.length > 0 && (
-
-                <Card className="p-6">
-
-                  <div className="flex items-center space-x-2 mb-4">
-
-                    <Shield className="h-5 w-5 text-purple-500" />
-
-                    <h3 className="text-lg font-semibold">Compliance Issues</h3>
-
-                  </div>
-
-                  <div className="space-y-3">
-
+                <div className="space-y-2">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Compliance Issues</h4>
+                  <div className="space-y-2 bg-secondary/15 p-4 rounded-xl border border-border/30">
                     {results.analysis.complianceIssues.map((issue: any, index: number) => (
-
-                      <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-
-                        <span className="text-sm">{issue.issue}</span>
-
+                      <div key={index} className="flex items-center justify-between p-3 border border-border/30 bg-background/50 rounded-lg">
+                        <span className="text-sm text-foreground/90">{issue.issue}</span>
                         <span className={`px-2 py-1 rounded text-xs font-medium ${
-
                           issue.status === 'Compliant' 
-
-                            ? 'bg-green-100 text-green-800' 
-
+                            ? 'bg-green-100 text-green-800 dark:bg-green-950/40 dark:text-green-300' 
                             : issue.status === 'Non-Compliant'
-
-                            ? 'bg-red-100 text-red-800'
-
-                            : 'bg-yellow-100 text-yellow-800'
-
+                            ? 'bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-300'
+                            : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-950/40 dark:text-yellow-300'
                         }`}>
-
                           {issue.status}
-
                         </span>
-
                       </div>
-
                     ))}
-
                   </div>
-
-                </Card>
-
+                </div>
               )}
-
-
 
               {/* Recommendations */}
-
               {results.analysis.recommendations && results.analysis.recommendations.length > 0 && (
-
-                <Card className="p-6">
-
-                  <div className="flex items-center space-x-2 mb-4">
-
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-
-                    <h3 className="text-lg font-semibold">Recommendations</h3>
-
-                  </div>
-
-                  <div className="space-y-2">
-
+                <div className="space-y-2">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">AI Recommendations</h4>
+                  <div className="space-y-2 bg-secondary/15 p-4 rounded-xl border border-border/30">
                     {results.analysis.recommendations.map((recommendation: string, index: number) => (
-
                       <div key={index} className="flex items-start space-x-2">
-
                         <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-
-                        <span className="text-sm">{recommendation}</span>
-
+                        <span className="text-sm text-foreground/90">{recommendation}</span>
                       </div>
-
                     ))}
-
                   </div>
-
-                </Card>
-
+                </div>
               )}
-
-
 
               {/* Citations */}
-
               {results.analysis.citations && results.analysis.citations.length > 0 && (
-
-                <Card className="p-6">
-
-                  <div className="flex items-center space-x-2 mb-4">
-
-                    <FileText className="h-5 w-5 text-blue-500" />
-
-                    <h3 className="text-lg font-semibold">Legal Citations</h3>
-
-                  </div>
-
-                  <div className="space-y-2">
-
+                <div className="pt-4 border-t border-border/30">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Legal Citations & References</h4>
+                  <div className="space-y-1.5">
                     {results.analysis.citations.map((citation: string, index: number) => (
-
-                      <div key={index} className="flex items-start space-x-2">
-
-                        <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-
-                        <span className="text-sm">{citation}</span>
-
+                      <div key={index} className="flex items-start space-x-2 text-xs text-muted-foreground">
+                        <span>•</span>
+                        <span>{citation}</span>
                       </div>
-
                     ))}
-
                   </div>
-
-                </Card>
-
+                </div>
               )}
-
             </div>
-
           )}
 
 

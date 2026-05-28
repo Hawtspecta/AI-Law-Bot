@@ -204,10 +204,68 @@ function extractLegalCitations(text) {
     });
     return [...new Set(cleanedCitations)];
 }
+// Helper to identify conversational queries/greetings
+function isConversationalQuery(query) {
+    const clean = query.trim().toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g, "");
+    if (!clean)
+        return true;
+    // Standard greetings and quick acknowledgements
+    const conversationalWords = new Set([
+        'hi', 'hello', 'hey', 'yo', 'hola', 'namaste', 'greetings',
+        'good', 'morning', 'afternoon', 'evening',
+        'ok', 'okay', 'yes', 'no', 'thanks', 'thank', 'you', 'thx', 'awesome', 'great', 'cool',
+        'bye', 'goodbye', 'see', 'tata', 'tc', 'take', 'care', 'lmao', 'lol', 'sup', 'there',
+        'heythere', 'hellothere', 'hithere'
+    ]);
+    const words = clean.split(/\s+/);
+    // If every word in a short query (<= 3 words) is a conversational word, it is conversational
+    if (words.length <= 3 && words.every(word => conversationalWords.has(word))) {
+        return true;
+    }
+    // Conversational questions that are not legal queries
+    const conversationalPhrases = [
+        'how are you',
+        'how is it going',
+        'how do you do',
+        'who are you',
+        'what are you',
+        'what is your name',
+        'what can you do',
+        'tell me about yourself',
+        'are you a lawyer',
+        'are you an ai',
+        'how does this work',
+        'what is this app'
+    ];
+    if (conversationalPhrases.some(phrase => clean.includes(phrase))) {
+        return true;
+    }
+    // If the query is super short (less than 4 characters) and doesn't contain legal terms
+    if (clean.length < 4) {
+        const legalKeywords = ['law', 'act', 'sec', 'tax', 'ipc', 'fir', 'court', 'judge', 'legal', 'case', 'bill'];
+        return !legalKeywords.some(keyword => clean.includes(keyword));
+    }
+    return false;
+}
 // RAG pipeline implementation
 async function ragPipeline(query, language = 'en', options = {}) {
     try {
         console.log(`🔍 RAG Pipeline: Processing query in ${language}`);
+        // Check if the query is conversational/greeting to bypass RAG and return a warm welcome
+        if (isConversationalQuery(query)) {
+            console.log(`💬 Conversational Query detected: "${query}". Skipping vector database retrieval.`);
+            const prompt = `You are an expert AI legal assistant specializing in Indian law. 
+The user is saying: "${query}"
+
+Respond in a friendly, conversational, welcoming, and helpful manner. Briefly state who you are (an AI Legal Assistant) and what you can do (answer legal queries, analyze contracts, compare legal documents, and fill legal forms based on Indian law). Encourage them to ask their legal questions. Do NOT cite any laws, sections, or acts for this simple conversational greeting. Respond in ${language === 'en' ? 'English' : language}.`;
+            const response = await (0, aiServices_1.generateAIResponse)(prompt, language);
+            return {
+                content: response.content,
+                citations: [],
+                sources: [],
+                context: 'Conversational - RAG skipped'
+            };
+        }
         // Step 1: Get query embedding
         const queryEmbedding = generateSimpleEmbedding(query);
         // Step 2: Search for relevant documents

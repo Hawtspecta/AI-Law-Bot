@@ -26,7 +26,9 @@ import {
 
   Eye,
 
-  Diff
+  Diff,
+
+  Bot
 
 } from "lucide-react";
 
@@ -365,209 +367,163 @@ const DocumentComparator = () => {
 
 
           {results && !isLoading && (
-
-            <div className="space-y-6">
+            <div className="w-full bg-card border border-border/60 border-l-4 border-l-accent rounded-2xl rounded-tl-none shadow-sm p-6 space-y-6 text-left animate-scale-in">
+              {/* Header */}
+              <div className="border-b border-border/30 pb-3">
+                <div className="flex items-center space-x-2">
+                  <GitCompare className="h-5 w-5 text-accent" />
+                  <h3 className="text-lg font-heading font-semibold text-primary">Document Comparison Report</h3>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Type: {results.comparison.comparisonType} • Completed at {new Date(results.timestamp).toLocaleTimeString()}
+                </p>
+              </div>
 
               {/* Summary */}
-
-              <Card className="p-6">
-
-                <div className="flex items-center space-x-2 mb-4">
-
-                  <Info className="h-5 w-5 text-primary" />
-
-                  <h3 className="text-lg font-semibold">Comparison Summary</h3>
-
-                </div>
-
-                <div className="prose max-w-none">
-
+              <div className="space-y-2">
+                <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Comparison Summary</h4>
+                <div className="prose max-w-none text-sm text-foreground leading-relaxed bg-secondary/30 p-4 rounded-xl border border-border/30">
                   <div dangerouslySetInnerHTML={{ __html: results.comparison.summary.replace(/\n/g, '<br/>') }} />
-
                 </div>
+              </div>
 
-              </Card>
-
-
-
-              {/* Differences */}
-
+              {/* Key Differences */}
               {results.comparison.differences && results.comparison.differences.length > 0 && (
-
-                <Card className="p-6">
-
-                  <div className="flex items-center space-x-2 mb-4">
-
-                    <Diff className="h-5 w-5 text-blue-500" />
-
-                    <h3 className="text-lg font-semibold">Key Differences</h3>
-
-                  </div>
-
+                <div className="space-y-2">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Key Differences Identified</h4>
                   <div className="space-y-4">
+                    {results.comparison.differences.map((difference: any, index: number) => {
+                      // Intelligent frontend sanitization to complete truncated warning headers
+                      let sectionTitle = difference.section || 'Clause / Provision';
+                      
+                      if (sectionTitle.endsWith('...')) {
+                        const cleanPrefix = sectionTitle.replace(/\.{3,}$/, '').trim();
+                        const fullRec = difference.recommendation || '';
+                        const fullDesc = difference.document2 || '';
+                        
+                        let completedText = '';
+                        
+                        // Helper to extract sentences
+                        const getSentences = (text: string) => {
+                          return text.split(/(?<=[.!?])\s+/).map(s => s.trim()).filter(Boolean);
+                        };
+                        
+                        const recSentences = getSentences(fullRec);
+                        const descSentences = getSentences(fullDesc);
+                        const allSentences = [...recSentences, ...descSentences];
+                        
+                        // 1. Try exact start matching (case-insensitive)
+                        for (const sentence of allSentences) {
+                          if (sentence.toLowerCase().startsWith(cleanPrefix.toLowerCase())) {
+                            completedText = sentence;
+                            break;
+                          }
+                        }
+                        
+                        // 2. Try fuzzy word matching (first 3 words)
+                        if (!completedText) {
+                          const words = cleanPrefix.split(/\s+/).filter(Boolean);
+                          if (words.length >= 3) {
+                            const firstThreeWords = words.slice(0, 3).join(' ').toLowerCase();
+                            for (const sentence of allSentences) {
+                              if (sentence.toLowerCase().startsWith(firstThreeWords)) {
+                                completedText = sentence;
+                                break;
+                              }
+                            }
+                          }
+                        }
+                        
+                        // 3. Try contains/index-of matching
+                        if (!completedText) {
+                          for (const sentence of allSentences) {
+                            if (sentence.toLowerCase().includes(cleanPrefix.toLowerCase())) {
+                              completedText = sentence;
+                              break;
+                            }
+                          }
+                        }
+                        
+                        // If we successfully completed the text, use it!
+                        if (completedText) {
+                          sectionTitle = completedText;
+                        } else {
+                          // Otherwise, just remove the trailing '...'
+                          sectionTitle = cleanPrefix;
+                        }
+                      }
 
-                    {results.comparison.differences.map((difference: any, index: number) => (
-
-                      <div key={index} className={`p-4 rounded-lg border ${getImpactColor(difference.impact)}`}>
-
-                        <div className="flex items-center space-x-2 mb-3">
-
-                          {getImpactIcon(difference.impact)}
-
-                          <span className="font-medium">{difference.section}</span>
-
-                          <span className="text-sm font-medium">{difference.impact} Impact</span>
-
-                        </div>
-
-                        <div className="grid md:grid-cols-2 gap-4 mb-3">
-
-                          <div>
-
-                            <h4 className="text-sm font-medium mb-1">Document 1:</h4>
-
-                            <p className="text-sm bg-gray-50 p-2 rounded">{difference.document1}</p>
-
+                      return (
+                        <div key={index} className={`p-4 rounded-xl border ${getImpactColor(difference.impact)} shadow-xs`}>
+                          <div className="flex items-center justify-between space-x-4 mb-3 font-medium">
+                            <div className="flex items-center space-x-2 min-w-0 flex-1">
+                              {getImpactIcon(difference.impact)}
+                              <span className="text-sm font-semibold">{sectionTitle}</span>
+                            </div>
+                            <span className="text-xs px-2 py-0.5 rounded bg-background/50 border border-border/10 flex-shrink-0">
+                              {difference.impact} Impact
+                            </span>
                           </div>
-
-                          <div>
-
-                            <h4 className="text-sm font-medium mb-1">Document 2:</h4>
-
-                            <p className="text-sm bg-gray-50 p-2 rounded">{difference.document2}</p>
-
+                          
+                          <div className="grid md:grid-cols-2 gap-4 mb-3">
+                            <div>
+                              <h5 className="text-xs font-semibold mb-1 text-muted-foreground">Document 1 (Original):</h5>
+                              <p className="text-xs bg-background/60 p-2.5 rounded border border-border/20 leading-relaxed">{difference.document1}</p>
+                            </div>
+                            <div>
+                              <h5 className="text-xs font-semibold mb-1 text-muted-foreground">Document 2 (Updated):</h5>
+                              <p className="text-xs bg-background/60 p-2.5 rounded border border-border/20 leading-relaxed">{difference.document2}</p>
+                            </div>
                           </div>
-
+                          
+                          <div className="text-xs border-t border-border/10 pt-2 mt-2">
+                            <strong>Recommendation:</strong> <span className="opacity-90">{difference.recommendation}</span>
+                          </div>
                         </div>
-
-                        <div className="text-sm">
-
-                          <strong>Recommendation:</strong> {difference.recommendation}
-
-                        </div>
-
-                      </div>
-
-                    ))}
-
+                      );
+                    })}
                   </div>
-
-                </Card>
-
+                </div>
               )}
-
-
 
               {/* Redline View */}
-
-              <Card className="p-6">
-
-                <div className="flex items-center space-x-2 mb-4">
-
-                  <Eye className="h-5 w-5 text-purple-500" />
-
-                  <h3 className="text-lg font-semibold">Visual Redline View</h3>
-
-                </div>
-
-                <div className="prose max-w-none">
-
+              <div className="space-y-2">
+                <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Visual Redline View</h4>
+                <div className="prose max-w-none text-sm text-foreground leading-relaxed bg-secondary/15 p-4 rounded-xl border border-border/30 overflow-x-auto whitespace-pre-wrap">
                   <div dangerouslySetInnerHTML={{ __html: results.comparison.redlineView.replace(/\n/g, '<br/>') }} />
-
                 </div>
-
-              </Card>
-
-
+              </div>
 
               {/* Recommendations */}
-
               {results.comparison.recommendations && results.comparison.recommendations.length > 0 && (
-
-                <Card className="p-6">
-
-                  <div className="flex items-center space-x-2 mb-4">
-
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-
-                    <h3 className="text-lg font-semibold">Recommendations</h3>
-
-                  </div>
-
-                  <div className="space-y-2">
-
+                <div className="space-y-2">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">AI Action Items</h4>
+                  <div className="space-y-2 bg-secondary/15 p-4 rounded-xl border border-border/30">
                     {results.comparison.recommendations.map((recommendation: string, index: number) => (
-
                       <div key={index} className="flex items-start space-x-2">
-
                         <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-
-                        <span className="text-sm">{recommendation}</span>
-
+                        <span className="text-sm text-foreground/90">{recommendation}</span>
                       </div>
-
                     ))}
-
                   </div>
-
-                </Card>
-
+                </div>
               )}
-
-
 
               {/* Citations */}
-
               {results.comparison.citations && results.comparison.citations.length > 0 && (
-
-                <Card className="p-6">
-
-                  <div className="flex items-center space-x-2 mb-4">
-
-                    <FileText className="h-5 w-5 text-blue-500" />
-
-                    <h3 className="text-lg font-semibold">Legal Citations</h3>
-
-                  </div>
-
-                  <div className="space-y-2">
-
+                <div className="pt-4 border-t border-border/30">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Legal Citations & References</h4>
+                  <div className="space-y-1.5">
                     {results.comparison.citations.map((citation: string, index: number) => (
-
-                      <div key={index} className="flex items-start space-x-2">
-
-                        <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-
-                        <span className="text-sm">{citation}</span>
-
+                      <div key={index} className="flex items-start space-x-2 text-xs text-muted-foreground">
+                        <span>•</span>
+                        <span>{citation}</span>
                       </div>
-
                     ))}
-
                   </div>
-
-                </Card>
-
-              )}
-
-
-
-              {/* Comparison Metadata */}
-
-              <Card className="p-4">
-
-                <div className="flex items-center justify-between text-sm text-muted-foreground">
-
-                  <span>Type: {results.comparison.comparisonType}</span>
-
-                  <span>Analysis completed at {new Date(results.timestamp).toLocaleTimeString()}</span>
-
                 </div>
-
-              </Card>
-
+              )}
             </div>
-
           )}
 
 

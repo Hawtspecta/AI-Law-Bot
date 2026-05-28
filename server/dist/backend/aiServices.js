@@ -184,13 +184,60 @@ function extractDifferences(content) {
     const differences = [];
     for (const line of lines) {
         const clean = line.replace(/<\/?[^>]+(>|$)/g, "").replace(/^\s*[•\-\*\d\.]+\s*/, "").trim();
-        if (clean.toLowerCase().includes('difference') || clean.toLowerCase().includes('change') || clean.toLowerCase().includes('modified') || clean.toLowerCase().includes('payment') || clean.toLowerCase().includes('term')) {
+        // Skip empty lines, short lines, or uppercase headings
+        if (clean.length < 25)
+            continue;
+        if (clean === clean.toUpperCase() && clean.length < 50)
+            continue;
+        // Skip conversational or intro/outro lines
+        const lower = clean.toLowerCase();
+        if (lower.includes('comparison summary') ||
+            lower.includes('key differences identified') ||
+            lower.includes('no other changes') ||
+            lower.includes('no differences were') ||
+            lower.includes('are identical') ||
+            lower.includes('refer to original') ||
+            lower.includes('based on the above') ||
+            lower.includes('the two legal documents') ||
+            lower.includes('documents provided are identical')) {
+            continue;
+        }
+        // Check if the line represents a real difference description
+        if (lower.includes('difference') ||
+            lower.includes('change') ||
+            lower.includes('modified') ||
+            lower.includes('payment') ||
+            lower.includes('term') ||
+            lower.includes('clause') ||
+            lower.includes('section') ||
+            lower.includes('amended')) {
+            // Try to parse out the section name if formatted with colon
+            let section = 'Clause / Provision';
+            let description = clean;
+            const colonIndex = clean.indexOf(':');
+            if (colonIndex > 5 && colonIndex < 40) {
+                section = clean.substring(0, colonIndex).replace(/^[•\-\*\d\.\s]+/, '').trim();
+                description = clean.substring(colonIndex + 1).trim();
+            }
+            else {
+                // Fallback section name based on matches
+                if (lower.includes('payment'))
+                    section = 'Payment Terms';
+                else if (lower.includes('termination'))
+                    section = 'Termination Clause';
+                else if (lower.includes('confidentiality') || lower.includes('nda'))
+                    section = 'Confidentiality';
+                else if (lower.includes('indemnity'))
+                    section = 'Indemnity / Liability';
+                else if (lower.includes('duration') || lower.includes('term'))
+                    section = 'Duration / Term';
+            }
             differences.push({
-                section: clean.substring(0, 30) + '...',
+                section: section,
                 document1: 'Refer to original document provisions.',
-                document2: 'Refer to updated document provisions.',
-                impact: clean.toLowerCase().includes('high') || clean.toLowerCase().includes('critical') ? 'High' : 'Medium',
-                recommendation: clean
+                document2: description,
+                impact: lower.includes('high') || lower.includes('critical') || lower.includes('severe') ? 'High' : 'Medium',
+                recommendation: `Verify if the updated terms for ${section.toLowerCase()} align with your interests.`
             });
         }
     }
@@ -198,25 +245,121 @@ function extractDifferences(content) {
         { section: 'Obligations & Terms', document1: 'Original terms', document2: 'Updated terms', impact: 'Medium', recommendation: 'Review differences carefully.' }
     ];
 }
+// Form-specific labels mapper to fix label mismatches
+const fieldLabels = {
+    'consumer-complaint': {
+        name: 'Complainant Name',
+        email: 'Email Address',
+        phone: 'Mobile Number',
+        address: 'Address',
+        complaint: 'Complaint Description',
+        amount: 'Amount Involved (₹)',
+        productName: 'Product or Service Name',
+        purchaseDate: 'Purchase/Transaction Date',
+        merchantName: 'Merchant/Service Provider Name'
+    },
+    'rti-application': {
+        name: 'Applicant Name',
+        email: 'Email Address',
+        phone: 'Mobile Number',
+        address: 'Postal Address',
+        complaint: 'Information Sought',
+        productName: 'Public Authority / Department',
+        purchaseDate: 'Date of Application',
+        merchantName: 'Reference Number (if any)'
+    },
+    'property-registration': {
+        name: 'Owner/Applicant Name',
+        email: 'Email Address',
+        phone: 'Phone Number',
+        address: 'Property Address',
+        complaint: 'Registration Purpose',
+        amount: 'Consideration Amount',
+        productName: 'Property Type',
+        purchaseDate: 'Registration Date',
+        merchantName: 'Counterparty / Seller Name'
+    },
+    'marriage-registration': {
+        name: 'Bride Name',
+        email: 'Email Address',
+        phone: 'Phone Number',
+        address: 'Marriage Venue / Address',
+        complaint: 'Marriage Details',
+        productName: 'Groom Name',
+        purchaseDate: 'Marriage Date',
+        merchantName: 'Witness Names'
+    },
+    'employment-contract': {
+        name: 'Employer Name',
+        email: 'Employer Email',
+        phone: 'Employer Contact',
+        address: 'Place of Employment',
+        complaint: 'Role and Responsibilities',
+        productName: 'Employee Name',
+        purchaseDate: 'Start Date',
+        amount: 'Salary / Consideration',
+        merchantName: 'Jurisdiction'
+    },
+    'rental-agreement': {
+        name: 'Landlord Name',
+        email: 'Email Address',
+        phone: 'Phone Number',
+        address: 'Property Address',
+        complaint: 'Tenancy Terms',
+        amount: 'Monthly Rent',
+        productName: 'Tenant Name',
+        purchaseDate: 'Lease Start Date',
+        merchantName: 'Lease End Date'
+    }
+};
 // Dynamic form fields validator
 function buildFormValidationResults(formType, userInputs) {
     const schemaFields = {
-        'consumer-complaint': ['name', 'email', 'complaint', 'productName', 'purchaseDate', 'merchantName'],
-        'rti-application': ['name', 'email', 'address', 'complaint', 'productName', 'purchaseDate'],
-        'property-registration': ['name', 'email', 'address', 'complaint', 'amount', 'purchaseDate'],
-        'marriage-registration': ['name', 'email', 'address', 'complaint', 'productName', 'purchaseDate'],
-        'employment-contract': ['name', 'email', 'address', 'complaint', 'productName', 'purchaseDate', 'amount'],
-        'rental-agreement': ['name', 'email', 'address', 'complaint', 'amount', 'productName', 'purchaseDate']
+        'consumer-complaint': ['name', 'email', 'phone', 'address', 'complaint', 'amount', 'productName', 'purchaseDate', 'merchantName'],
+        'rti-application': ['name', 'email', 'phone', 'address', 'complaint', 'productName', 'purchaseDate', 'merchantName'],
+        'property-registration': ['name', 'email', 'phone', 'address', 'complaint', 'amount', 'productName', 'purchaseDate', 'merchantName'],
+        'marriage-registration': ['name', 'email', 'phone', 'address', 'complaint', 'productName', 'purchaseDate', 'merchantName'],
+        'employment-contract': ['name', 'email', 'phone', 'address', 'complaint', 'productName', 'purchaseDate', 'amount', 'merchantName'],
+        'rental-agreement': ['name', 'email', 'phone', 'address', 'complaint', 'amount', 'productName', 'purchaseDate', 'merchantName']
     };
     const fields = schemaFields[formType] || schemaFields['consumer-complaint'];
-    return fields.map((field) => {
+    const labels = fieldLabels[formType] || fieldLabels['consumer-complaint'];
+    return fields
+        .filter((field) => labels[field] !== undefined)
+        .map((field) => {
         const value = userInputs[field];
         const isPresent = value && String(value).trim().length > 0;
-        const label = field.charAt(0).toUpperCase() + field.slice(1).replace(/([A-Z])/g, ' $1');
+        const label = labels[field] || (field.charAt(0).toUpperCase() + field.slice(1).replace(/([A-Z])/g, ' $1'));
+        let status = isPresent ? 'valid' : 'invalid';
+        let message = isPresent ? `${label} is complete and verified.` : `${label} is required to fill out this legal form.`;
+        // Email validation
+        if (isPresent && field === 'email') {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(String(value).trim())) {
+                status = 'warning';
+                message = `${label} is filled but does not look like a valid email address format.`;
+            }
+        }
+        // Phone number validation
+        if (isPresent && field === 'phone') {
+            const phoneDigits = String(value).replace(/\D/g, '');
+            if (phoneDigits.length < 10) {
+                status = 'warning';
+                message = `${label} is filled but should typically contain at least 10 digits.`;
+            }
+        }
+        // Amount numerical validation
+        if (isPresent && field === 'amount') {
+            const amountNum = parseFloat(String(value).replace(/[^0-9.]/g, ''));
+            if (isNaN(amountNum) || amountNum <= 0) {
+                status = 'warning';
+                message = `${label} should be a positive numerical value.`;
+            }
+        }
         return {
-            field,
-            status: isPresent ? 'valid' : 'invalid',
-            message: isPresent ? `${label} is complete and verified.` : `${label} is required to fill out this legal form.`
+            field: label,
+            status,
+            message
         };
     });
 }

@@ -24,7 +24,9 @@ import {
 
   AlertTriangle,
 
-  Info
+  Info,
+
+  Bot
 
 } from "lucide-react";
 
@@ -272,84 +274,38 @@ const LegalResearch = ({ currentLanguage = 'en' }) => {
 
 
           {results && !isLoading && (
-
-            <div className="space-y-6">
-
-              {/* Search Results Summary */}
-
-              <Card className="p-6">
-
-                <div className="flex items-center space-x-2 mb-4">
-
-                  <BookOpen className="h-5 w-5 text-primary" />
-
-                  <h3 className="text-lg font-semibold">{getTranslation('searchResults', currentLanguage)}</h3>
-
+            <div className="w-full bg-card border border-border/60 border-l-4 border-l-accent rounded-2xl rounded-tl-none shadow-sm p-6 space-y-6 text-left animate-scale-in">
+              {/* Header */}
+              <div className="border-b border-border/30 pb-3">
+                <div className="flex items-center space-x-2">
+                  <BookOpen className="h-5 w-5 text-accent" />
+                  <h3 className="text-lg font-heading font-semibold text-primary">{getTranslation('searchResults', currentLanguage)}</h3>
                 </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {getTranslation('query', currentLanguage)}: "{results.query}" • {getTranslation('searchCompletedAt', currentLanguage)} {new Date(results.timestamp).toLocaleTimeString()}
+                </p>
+              </div>
 
-                <div className="prose max-w-none">
-
-                  <div dangerouslySetInnerHTML={{ __html: results.results.content.replace(/\n/g, '<br/>') }} />
-
-                </div>
-
-              </Card>
-
-
+              {/* Content */}
+              <div className="prose max-w-none text-sm text-foreground leading-relaxed bg-secondary/30 p-4 rounded-xl border border-border/30">
+                <div dangerouslySetInnerHTML={{ __html: results.results.content.replace(/\n/g, '<br/>') }} />
+              </div>
 
               {/* Citations */}
-
               {results.results.citations && results.results.citations.length > 0 && (
-
-                <Card className="p-6">
-
-                  <div className="flex items-center space-x-2 mb-4">
-
-                    <FileText className="h-5 w-5 text-blue-500" />
-
-                    <h3 className="text-lg font-semibold">{getTranslation('legalCitations', currentLanguage)}</h3>
-
-                  </div>
-
-                  <div className="space-y-2">
-
+                <div className="pt-4 border-t border-border/30">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">{getTranslation('legalCitations', currentLanguage)}</h4>
+                  <div className="space-y-1.5">
                     {results.results.citations.map((citation: string, index: number) => (
-
-                      <div key={index} className="flex items-start space-x-2">
-
-                        <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-
-                        <span className="text-sm">{citation}</span>
-
+                      <div key={index} className="flex items-start space-x-2 text-xs text-muted-foreground">
+                        <span>•</span>
+                        <span>{citation}</span>
                       </div>
-
                     ))}
-
                   </div>
-
-                </Card>
-
-              )}
-
-
-
-
-              {/* Search Metadata */}
-
-              <Card className="p-4">
-
-                <div className="flex items-center justify-between text-sm text-muted-foreground">
-
-                  <span>{getTranslation('query', currentLanguage)}: "{results.query}"</span>
-
-                  <span>{getTranslation('searchCompletedAt', currentLanguage)} {new Date(results.timestamp).toLocaleTimeString()}</span>
-
                 </div>
-
-              </Card>
-
+              )}
             </div>
-
           )}
 
 

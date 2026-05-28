@@ -26,7 +26,9 @@ import {
 
   FileText,
 
-  Shield
+  Shield,
+
+  Bot
 
 } from "lucide-react";
 
@@ -581,147 +583,165 @@ const FormAssistance = () => {
 
 
           {results && !isLoading && (
-
-            <div className="space-y-6">
+            <div className="w-full bg-card border border-border/60 border-l-4 border-l-accent rounded-2xl rounded-tl-none shadow-sm p-6 space-y-6 text-left animate-scale-in">
+              {/* Header */}
+              <div className="border-b border-border/30 pb-3">
+                <div className="flex items-center space-x-2">
+                  <ClipboardList className="h-5 w-5 text-accent" />
+                  <h3 className="text-lg font-heading font-semibold text-primary">Form Assistance Report</h3>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">Completed at {new Date(results.timestamp).toLocaleTimeString()}</p>
+              </div>
 
               {/* Validation Results */}
-
               {results.filledForm.validationResults && results.filledForm.validationResults.length > 0 && (
-
-                <Card className="p-6">
-
-                  <div className="flex items-center space-x-2 mb-4">
-
-                    <Shield className="h-5 w-5 text-blue-500" />
-
-                    <h3 className="text-lg font-semibold">Validation Results</h3>
-
-                  </div>
-
+                <div className="space-y-2">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Validation Results</h4>
                   <div className="space-y-3">
+                     {results.filledForm.validationResults.map((validation: any, index: number) => {
+                      // Dynamically map technical field keys to human-friendly labels on the frontend
+                      const schema = formFieldSchemas[formType as keyof typeof formFieldSchemas] || formFieldSchemas["consumer-complaint"];
+                      
+                      // Match by key or label
+                      const fieldSchema = schema.fields.find((f: any) => 
+                        f.key === validation.field || 
+                        f.label.toLowerCase() === validation.field.toLowerCase() ||
+                        f.key.toLowerCase() === validation.field.toLowerCase()
+                      );
+                      
+                      const fieldLabel = fieldSchema ? fieldSchema.label : (validation.field.charAt(0).toUpperCase() + validation.field.slice(1).replace(/([A-Z])/g, ' $1'));
+                      
+                      // Perform client-side robust validation override
+                      let validationStatus = validation.status;
+                      let validationMessage = validation.message || '';
+                      
+                      if (fieldSchema) {
+                        const rawValue = userInputs[fieldSchema.key];
+                        const value = typeof rawValue === 'string' ? rawValue.trim() : rawValue;
+                        const isPresent = value && String(value).length > 0;
+                        
+                        // 1. Required Check
+                        if (fieldSchema.required && !isPresent) {
+                          validationStatus = 'invalid';
+                          validationMessage = `❌ ${fieldSchema.label} is required to fill out this legal form.`;
+                        } 
+                        // 2. Optional but Empty Check
+                        else if (!isPresent) {
+                          validationStatus = 'warning';
+                          validationMessage = `⚠️ ${fieldSchema.label} is optional. Leave blank only if not applicable.`;
+                        } 
+                        // 3. Present field validations
+                        else {
+                          // Email validation
+                          if (fieldSchema.type === 'email' || fieldSchema.key === 'email') {
+                            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                            if (!emailRegex.test(String(value))) {
+                              validationStatus = 'invalid';
+                              validationMessage = `❌ ${fieldSchema.label} must be a valid email address format (e.g. name@example.com) for official legal records.`;
+                            } else {
+                              validationStatus = 'valid';
+                              validationMessage = `✅ ${fieldSchema.label} is complete and verified.`;
+                            }
+                          }
+                          
+                          // Mobile / Phone validation
+                          else if (fieldSchema.key === 'phone' || fieldSchema.label.toLowerCase().includes('phone') || fieldSchema.label.toLowerCase().includes('mobile')) {
+                            const phoneDigits = String(value).replace(/\D/g, '');
+                            if (phoneDigits.length < 10) {
+                              validationStatus = 'invalid';
+                              validationMessage = `❌ ${fieldSchema.label} must be a valid contact number with at least 10 digits.`;
+                            } else {
+                              validationStatus = 'valid';
+                              validationMessage = `✅ ${fieldSchema.label} is complete and verified.`;
+                            }
+                          }
+                          
+                          // Amount numerical validation
+                          else if (fieldSchema.key === 'amount' || fieldSchema.label.toLowerCase().includes('amount') || fieldSchema.label.toLowerCase().includes('salary')) {
+                            const amountNum = parseFloat(String(value).replace(/[^0-9.]/g, ''));
+                            if (isNaN(amountNum) || amountNum <= 0) {
+                              validationStatus = 'invalid';
+                              validationMessage = `❌ ${fieldSchema.label} must be a positive numerical amount.`;
+                            } else {
+                              validationStatus = 'valid';
+                              validationMessage = `✅ ${fieldSchema.label} is complete and verified.`;
+                            }
+                          }
+                          
+                          // Default valid message if no override was triggered and it was marked valid
+                          else if (validationStatus === 'valid') {
+                            validationMessage = `✅ ${fieldSchema.label} is complete and verified.`;
+                          }
+                        }
+                      }
 
-                    {results.filledForm.validationResults.map((validation: any, index: number) => (
+                      // Also sanitize original message variables to ensure correct label terminology is used contextually
+                      if (fieldSchema) {
+                        validationMessage = validationMessage
+                          .replace(new RegExp(`\\b${validation.field}\\b`, 'gi'), fieldSchema.label)
+                          .replace(/Product or Service Name/gi, fieldSchema.label)
+                          .replace(/Product Name/gi, fieldSchema.label)
+                          .replace(/Complainant Name/gi, fieldSchema.label)
+                          .replace(/Applicant Name/gi, fieldSchema.label)
+                          .replace(/Owner \/ Applicant Name/gi, fieldSchema.label)
+                          .replace(/Bride Name/gi, fieldSchema.label)
+                          .replace(/Employer Name/gi, fieldSchema.label)
+                          .replace(/Landlord Name/gi, fieldSchema.label);
+                      }
 
-                      <div key={index} className={`p-4 rounded-lg border ${getValidationColor(validation.status)}`}>
-
-                        <div className="flex items-center space-x-2 mb-2">
-
-                          {getValidationIcon(validation.status)}
-
-                          <span className="font-medium">{validation.field}</span>
-
-                          <span className="text-sm font-medium">{validation.status}</span>
-
+                      return (
+                        <div key={index} className={`p-4 rounded-xl border ${getValidationColor(validationStatus)} shadow-xs`}>
+                          <div className="flex items-center space-x-2 mb-2 font-medium">
+                            {getValidationIcon(validationStatus)}
+                            <span className="text-sm">{fieldLabel}</span>
+                            <span className="text-xs px-2 py-0.5 rounded bg-background/50 border border-border/10">{validationStatus}</span>
+                          </div>
+                          <p className="text-sm opacity-95">{validationMessage}</p>
                         </div>
-
-                        <p className="text-sm">{validation.message}</p>
-
-                      </div>
-
-                    ))}
-
+                      );
+                    })}
                   </div>
-
-                </Card>
-
+                </div>
               )}
-
-
 
               {/* Suggestions */}
-
               {results.filledForm.suggestions && results.filledForm.suggestions.length > 0 && (
-
-                <Card className="p-6">
-
-                  <div className="flex items-center space-x-2 mb-4">
-
-                    <Info className="h-5 w-5 text-green-500" />
-
-                    <h3 className="text-lg font-semibold">AI Suggestions</h3>
-
-                  </div>
-
-                  <div className="space-y-2">
-
+                <div className="space-y-2">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">AI Suggestions</h4>
+                  <div className="space-y-2 bg-secondary/15 p-4 rounded-xl border border-border/30">
                     {results.filledForm.suggestions.map((suggestion: string, index: number) => (
-
                       <div key={index} className="flex items-start space-x-2">
-
                         <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-
-                        <span className="text-sm">{suggestion}</span>
-
+                        <span className="text-sm text-foreground/90">{suggestion}</span>
                       </div>
-
                     ))}
-
                   </div>
-
-                </Card>
-
+                </div>
               )}
-
-
 
               {/* Completed Form */}
-
-              <Card className="p-6">
-
-                <div className="flex items-center space-x-2 mb-4">
-
-                  <FileText className="h-5 w-5 text-primary" />
-
-                  <h3 className="text-lg font-semibold">Completed Form</h3>
-
-                </div>
-
-                <div className="prose max-w-none">
-
+              <div className="space-y-2">
+                <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Drafted Form Preview</h4>
+                <div className="prose max-w-none text-sm text-foreground leading-relaxed bg-secondary/30 p-4 rounded-xl border border-border/30 whitespace-pre-wrap">
                   <div dangerouslySetInnerHTML={{ __html: results.filledForm.completedForm.replace(/\n/g, '<br/>') }} />
-
                 </div>
-
-              </Card>
-
-
+              </div>
 
               {/* Citations */}
-
               {results.filledForm.citations && results.filledForm.citations.length > 0 && (
-
-                <Card className="p-6">
-
-                  <div className="flex items-center space-x-2 mb-4">
-
-                    <FileText className="h-5 w-5 text-blue-500" />
-
-                    <h3 className="text-lg font-semibold">Legal References</h3>
-
-                  </div>
-
-                  <div className="space-y-2">
-
+                <div className="pt-4 border-t border-border/30">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Legal References</h4>
+                  <div className="space-y-1.5">
                     {results.filledForm.citations.map((citation: string, index: number) => (
-
-                      <div key={index} className="flex items-start space-x-2">
-
-                        <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-
-                        <span className="text-sm">{citation}</span>
-
+                      <div key={index} className="flex items-start space-x-2 text-xs text-muted-foreground">
+                        <span>•</span>
+                        <span>{citation}</span>
                       </div>
-
                     ))}
-
                   </div>
-
-                </Card>
-
+                </div>
               )}
-
             </div>
-
           )}
 
 
