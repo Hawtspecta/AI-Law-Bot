@@ -1,7 +1,6 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
-const HEALTH_CHECK_URL = "http://localhost:3001/health";
-
+const HEALTH_CHECK_URL = `${API_BASE_URL}/health`;
 
 
 export interface Message {
