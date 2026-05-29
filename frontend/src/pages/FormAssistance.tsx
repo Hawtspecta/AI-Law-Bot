@@ -379,15 +379,10 @@ const FormAssistance = () => {
             <div className="flex items-center space-x-4">
 
               <Button
-
                 variant="ghost"
-
                 size="sm"
-
-                onClick={() => navigate("/")}
-
+                onClick={() => navigate("/#tools")}
                 className="flex items-center space-x-2"
-
               >
 
                 <ArrowLeft className="h-4 w-4" />
@@ -427,145 +422,107 @@ const FormAssistance = () => {
             <div className="max-w-4xl mx-auto">
 
               {/* Form Section */}
-
-          <Card className="p-6 mb-8">
-
-            <div className="space-y-4">
-
+          <Card className="p-5 sm:p-8 mb-8 border border-border/40 gradient-card rounded-2xl shadow-sm">
+            <div className="space-y-6">
               <div>
-
-                <h2 className="text-2xl font-semibold mb-2">Legal Form Assistance</h2>
-
-                <p className="text-muted-foreground">
-
+                <h2 className="text-xl sm:text-2xl font-heading font-bold text-primary mb-1.5 flex items-center space-x-2">
+                  <ClipboardList className="h-5 w-5 text-accent" />
+                  <span>Legal Form Assistance</span>
+                </h2>
+                <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
                   Get AI-powered assistance with legal form filling, validation, and error minimization.
-
                 </p>
-
               </div>
 
-
-
-              <div className="space-y-4">
-
-                <div>
-
-                  <label className="text-sm font-medium mb-2 block">Form Type</label>
-
+              <div className="space-y-6">
+                {/* Form Selection */}
+                <div className="bg-secondary/20 p-4 sm:p-5 rounded-xl border border-border/20 space-y-2">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block">
+                    Select Document/Form Type
+                  </label>
                   <Select value={formType} onValueChange={setFormType}>
-
-                    <SelectTrigger>
-
+                    <SelectTrigger className="h-11 rounded-lg border-border/50 bg-background/50">
                       <SelectValue placeholder="Select form type" />
-
                     </SelectTrigger>
-
                     <SelectContent>
-
                       {formTypes.map((type) => (
-
                         <SelectItem key={type.value} value={type.value}>
-
                           {type.label}
-
                         </SelectItem>
-
                       ))}
-
                     </SelectContent>
-
                   </Select>
-
                 </div>
 
-
-
-                <div className="space-y-4">
-
-                  {activeFormSchema.fields.map((field) => (
-
-                    <div key={field.key} className="space-y-2">
-
-                      <div className="flex items-center justify-between">
-
-                        <label className="text-sm font-medium block">{field.label}{field.required ? ' *' : ''}</label>
-
-                        <span className="text-xs text-muted-foreground">{field.hint}</span>
-
-                      </div>
-
-                      {field.type === 'textarea' ? (
-
-                        <Textarea
-
-                          value={String(userInputs[field.key] || '')}
-
-                          onChange={(e) => setUserInputs({...userInputs, [field.key]: e.target.value})}
-
-                          placeholder={`Enter ${field.label.toLowerCase()}`}
-
-                          className="min-h-[100px]"
-
-                        />
-
-                      ) : (
-
-                        <Input
-                          type={field.type === 'email' ? 'email' : field.type === 'date' ? 'date' : 'text'}
-                          value={String(userInputs[field.key] || '')}
-                          onChange={(e) => setUserInputs({...userInputs, [field.key]: e.target.value})}
-                          onClick={(e) => {
-                            if (field.type === 'date') {
-                              try {
-                                e.currentTarget.showPicker();
-                              } catch (err) {
-                                console.warn("Native showPicker not supported:", err);
+                {/* Grid Inputs */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
+                  {activeFormSchema.fields.map((field) => {
+                    const isFullWidth = field.type === 'textarea' || field.key === 'address';
+                    return (
+                      <div key={field.key} className={`space-y-1.5 ${isFullWidth ? 'md:col-span-2' : 'col-span-1'}`}>
+                        <label className="text-xs sm:text-sm font-semibold text-primary flex items-center space-x-1">
+                          <span>{field.label}</span>
+                          {field.required && <span className="text-destructive font-bold text-xs">*</span>}
+                        </label>
+                        
+                        {field.type === 'textarea' ? (
+                          <Textarea
+                            value={String(userInputs[field.key] || '')}
+                            onChange={(e) => setUserInputs({...userInputs, [field.key]: e.target.value})}
+                            placeholder={`Enter ${field.label.toLowerCase()}`}
+                            className="min-h-[120px] rounded-xl border-border/50 bg-background/50 focus:border-accent transition-all resize-y text-sm px-4 py-3 leading-relaxed"
+                          />
+                        ) : (
+                          <Input
+                            type={field.type === 'email' ? 'email' : field.type === 'date' ? 'date' : 'text'}
+                            value={String(userInputs[field.key] || '')}
+                            onChange={(e) => setUserInputs({...userInputs, [field.key]: e.target.value})}
+                            onClick={(e) => {
+                              if (field.type === 'date') {
+                                try {
+                                  e.currentTarget.showPicker();
+                                } catch (err) {
+                                  console.warn("Native showPicker not supported:", err);
+                                }
                               }
-                            }
-                          }}
-                          placeholder={`Enter ${field.label.toLowerCase()}`}
-                        />
-
-                      )}
-
-                    </div>
-
-                  ))}
-
+                            }}
+                            placeholder={`Enter ${field.label.toLowerCase()}`}
+                            className="h-11 rounded-xl border-border/50 bg-background/50 focus:border-accent transition-all text-sm px-4"
+                          />
+                        )}
+                        
+                        {field.hint && (
+                          <span className="text-[11px] text-muted-foreground/80 leading-normal block px-1">
+                            {field.hint}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
 
-
-
-                <Button onClick={handleAnalyze} disabled={isLoading || activeFormSchema.fields.filter((field) => field.required).some((field) => !String(userInputs[field.key] || '').trim())}>
-
-                  {isLoading ? (
-
-                    <>
-
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-
-                      Analyzing...
-
-                    </>
-
-                  ) : (
-
-                    <>
-
-                      <ClipboardList className="h-4 w-4 mr-2" />
-
-                      Analyze Form
-
-                    </>
-
-                  )}
-
-                </Button>
-
+                {/* Bottom Actions */}
+                <div className="pt-5 border-t border-border/20 flex justify-end">
+                  <Button 
+                    onClick={handleAnalyze} 
+                    disabled={isLoading || activeFormSchema.fields.filter((field) => field.required).some((field) => !String(userInputs[field.key] || '').trim())}
+                    className="w-full md:w-auto h-11 px-8 rounded-xl shadow-md transition-smooth hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Analyzing...
+                      </>
+                    ) : (
+                      <>
+                        <ClipboardList className="h-4 w-4 mr-2" />
+                        Analyze Form
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
-
             </div>
-
           </Card>
 
 
@@ -599,9 +556,9 @@ const FormAssistance = () => {
 
               {/* Validation Results */}
               {results.filledForm.validationResults && results.filledForm.validationResults.length > 0 && (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Validation Results</h4>
-                  <div className="space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                      {results.filledForm.validationResults.map((validation: any, index: number) => {
                       // Dynamically map technical field keys to human-friendly labels on the frontend
                       const schema = formFieldSchemas[formType as keyof typeof formFieldSchemas] || formFieldSchemas["consumer-complaint"];

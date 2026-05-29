@@ -31,14 +31,23 @@ const Index = () => {
 
 
   // Save language preference to localStorage
-
   useEffect(() => {
-
     localStorage.setItem('selectedLanguage', currentLanguage);
-
   }, [currentLanguage]);
 
-
+  // Scroll to hash section on page load (e.g. returning to #tools)
+  useEffect(() => {
+    if (window.location.hash) {
+      const id = window.location.hash.substring(1);
+      // Slight delay to ensure the DOM is fully rendered and styled before scrolling
+      setTimeout(() => {
+        const element = document.getElementById(id);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 150);
+    }
+  }, []);
 
   const handleLanguageChange = (language: string) => {
 
