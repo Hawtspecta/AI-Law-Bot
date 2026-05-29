@@ -19,53 +19,71 @@ const App = () => {
   useEffect(() => {
     const cursor = document.getElementById("custom-cursor");
     
-    const handleMouseMove = (e: MouseEvent) => {
+    const handleMouseMove = (e: PointerEvent) => {
       if (cursor) {
         cursor.style.left = `${e.clientX}px`;
         cursor.style.top = `${e.clientY}px`;
       }
     };
 
-    const handleMouseOver = (e: MouseEvent) => {
-      const target = e.target as HTMLElement | null;
-      if (target && (
-        target.closest("button") || 
-        target.closest("a") || 
-        target.closest("select") || 
-        target.closest("option") || 
-        target.closest("input") || 
-        target.closest("textarea") || 
-        target.closest(".cursor-pointer") || 
-        target.closest('[role="button"]') ||
-        target.closest('[role="option"]') ||
-        target.closest('[role="combobox"]') ||
-        target.closest('[role="menuitem"]') ||
-        target.closest('[role="tab"]')
-      )) {
-        cursor?.classList.add("cursor-hover");
-      } else {
-        cursor?.classList.remove("cursor-hover");
+    const handleMouseOver = (e: PointerEvent) => {
+      // If the mouse is pressed down, we are in a click/drag gesture.
+      // Do not change the hover state during an active click/drag gesture to prevent jitter!
+      if (e.buttons === 1) {
+        return;
       }
+
+      const target = e.target as HTMLElement | null;
+      if (!target || !cursor) return;
+
+      const interactive = target.closest(
+        "button, a, select, option, input, textarea, .cursor-pointer, [role='button'], [role='option'], [role='combobox'], [role='menuitem'], [role='tab'], [role='slider'], [data-orientation], .touch-none"
+      ) as HTMLElement | null;
+
+      if (interactive) {
+        // Gavel is bent only when the element is actually clickable (interactive and NOT disabled/readonly)
+        const isDisabled = 
+          interactive.hasAttribute("disabled") || 
+          interactive.getAttribute("aria-disabled") === "true" ||
+          interactive.classList.contains("disabled") ||
+          interactive.classList.contains("pointer-events-none") ||
+          interactive.closest("[disabled]") !== null ||
+          interactive.closest(".pointer-events-none") !== null;
+
+        // Standard text inputs/textareas are interactive but not "clickable discs" to bang a gavel on
+        const isTextInput = 
+          (interactive.tagName === "INPUT" && 
+            !["button", "submit", "image", "checkbox", "radio", "file"].includes((interactive as HTMLInputElement).type.toLowerCase())) ||
+          interactive.tagName === "TEXTAREA";
+
+        if (!isDisabled && !isTextInput) {
+          cursor.classList.add("cursor-hover");
+          return;
+        }
+      }
+      cursor.classList.remove("cursor-hover");
     };
 
     const handleMouseDown = () => {
       cursor?.classList.add("cursor-clicking");
     };
 
-    const handleMouseUp = () => {
+    const handleMouseUp = (e: PointerEvent) => {
       cursor?.classList.remove("cursor-clicking");
+      // Trigger a hover check on mouse up to update the gavel rotation immediately
+      handleMouseOver(e);
     };
 
-    window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mouseover", handleMouseOver);
-    window.addEventListener("mousedown", handleMouseDown);
-    window.addEventListener("mouseup", handleMouseUp);
+    window.addEventListener("pointermove", handleMouseMove);
+    window.addEventListener("pointerover", handleMouseOver);
+    window.addEventListener("pointerdown", handleMouseDown);
+    window.addEventListener("pointerup", handleMouseUp);
 
     return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseover", handleMouseOver);
-      window.removeEventListener("mousedown", handleMouseDown);
-      window.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener("pointermove", handleMouseMove);
+      window.removeEventListener("pointerover", handleMouseOver);
+      window.removeEventListener("pointerdown", handleMouseDown);
+      window.removeEventListener("pointerup", handleMouseUp);
     };
   }, []);
 

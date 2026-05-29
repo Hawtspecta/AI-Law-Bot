@@ -25,22 +25,22 @@ const Hero = ({ currentLanguage = 'en' }: HeroProps) => {
   const revealRef = useScrollReveal();
 
   const handleStartChat = async () => {
+    // Scroll instantly to the chat interface so the UI feels incredibly responsive!
+    const chatElement = document.getElementById('ask-a-question');
+    if (chatElement) {
+      chatElement.scrollIntoView({ behavior: 'smooth' });
+    }
+
     setIsLoading(true);
     try {
       const response = await apiClient.createSession('anonymous', 'New Conversation');
       if (response.success) {
         localStorage.setItem('currentSessionId', response.session.sessionId);
-        const chatElement = document.getElementById('ask-a-question');
-        if (chatElement) chatElement.scrollIntoView({ behavior: 'smooth' });
         toast.success('New chat session started!');
       } else {
-        const chatElement = document.getElementById('ask-a-question');
-        if (chatElement) chatElement.scrollIntoView({ behavior: 'smooth' });
         toast.success('Chat interface opened!');
       }
     } catch (error) {
-      const chatElement = document.getElementById('ask-a-question');
-      if (chatElement) chatElement.scrollIntoView({ behavior: 'smooth' });
       toast.success('Chat interface opened!');
     } finally {
       setIsLoading(false);
