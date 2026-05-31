@@ -18,11 +18,39 @@ const queryClient = new QueryClient();
 const App = () => {
   useEffect(() => {
     const cursor = document.getElementById("custom-cursor");
+
+    const isTextInputTarget = (el: HTMLElement | null): boolean => {
+      if (!el) return false;
+      const tagName = el.tagName.toUpperCase();
+      if (tagName === 'INPUT') {
+        const type = (el as HTMLInputElement).type?.toLowerCase() || 'text';
+        return !["button", "submit", "image", "checkbox", "radio", "file", "range", "color"].includes(type);
+      }
+      if (tagName === 'TEXTAREA') return true;
+      if (el.isContentEditable) return true;
+      
+      const closestText = el.closest("input, textarea, [contenteditable='true']");
+      if (closestText) {
+        if (closestText.tagName.toUpperCase() === 'INPUT') {
+          const type = (closestText as HTMLInputElement).type?.toLowerCase() || 'text';
+          return !["button", "submit", "image", "checkbox", "radio", "file", "range", "color"].includes(type);
+        }
+        return true;
+      }
+      return false;
+    };
     
     const handleMouseMove = (e: PointerEvent) => {
       if (cursor) {
         cursor.style.left = `${e.clientX}px`;
         cursor.style.top = `${e.clientY}px`;
+
+        const target = e.target as HTMLElement | null;
+        if (isTextInputTarget(target)) {
+          cursor.classList.add("custom-cursor-hidden");
+        } else {
+          cursor.classList.remove("custom-cursor-hidden");
+        }
       }
     };
 
@@ -35,6 +63,14 @@ const App = () => {
 
       const target = e.target as HTMLElement | null;
       if (!target || !cursor) return;
+
+      if (isTextInputTarget(target)) {
+        cursor.classList.add("custom-cursor-hidden");
+        cursor.classList.remove("cursor-hover");
+        return;
+      } else {
+        cursor.classList.remove("custom-cursor-hidden");
+      }
 
       const interactive = target.closest(
         "button, a, select, option, input, textarea, .cursor-pointer, [role='button'], [role='option'], [role='combobox'], [role='menuitem'], [role='tab'], [role='slider'], [data-orientation], .touch-none"

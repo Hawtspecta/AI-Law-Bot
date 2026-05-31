@@ -198,9 +198,14 @@ All colors MUST be HSL.
   /* Custom Hardware-Accelerated Gavel Cursor */
   #custom-cursor {
     transform: translate(-16px, -28px) rotate(45deg);
-    transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.15s ease;
     /* Soft premium shadow for depth */
     filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.15));
+  }
+  #custom-cursor.custom-cursor-hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-16px, -28px) rotate(45deg) scale(0);
   }
   #custom-cursor.cursor-hover {
     /* Gavel Strike hover state: tilts down and scales up elegantly mimicking a strike */
@@ -227,6 +232,12 @@ All colors MUST be HSL.
   @media (min-width: 768px) {
     *, *::before, *::after {
       cursor: none !important;
+    }
+    input:not([type="button"]):not([type="submit"]):not([type="image"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]):not([type="color"]),
+    textarea,
+    [contenteditable="true"],
+    [contenteditable="true"] * {
+      cursor: text !important;
     }
   }
 
