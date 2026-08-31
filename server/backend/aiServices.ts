@@ -363,7 +363,7 @@ export function buildFormValidationResults(formType: string, userInputs: any) {
 
 // Self-healing response generator with automatic rate limit fallback
 export async function generateAIResponse(message: string, language: string = "en"): Promise<AIResponse> {
-  const primaryModel = "llama-3.3-70b-versatile";
+  const primaryModel = "openai/gpt-oss-20b";
   const fallbackModel = "llama-3.1-8b-instant";
 
   const systemContent = `You are a highly professional, expert AI legal assistant specializing in Indian law.
